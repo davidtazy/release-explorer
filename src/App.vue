@@ -30,7 +30,7 @@ onUnmounted(() => {
   <div class="app-shell">
     <header class="app-header">
       <RouterLink to="/" class="brand">
-        <span class="brand-mark" aria-hidden="true">◆</span>
+        <img class="brand-mark" src="/rocket.svg" alt="" width="34" height="34" />
         <span class="brand-text">
           <strong>Release Explorer</strong>
           <small>GitLab · read-only</small>
