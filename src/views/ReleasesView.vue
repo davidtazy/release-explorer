@@ -4,7 +4,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useReleasesStore } from '@/stores/releases'
 import { isConnected } from '@/lib/auth'
 import EntityAvatar from '@/components/EntityAvatar.vue'
-import { formatDate, formatRelativeTime } from '@/lib/format'
+import { formatDate, formatRelativeTime, formatTimeAgo } from '@/lib/format'
 import {
   PROJECT_SORT_OPTIONS,
   groupProjectsByParent,
@@ -200,7 +200,12 @@ function openProject(path: string): void {
                     </span>
                     <span v-else class="muted">No release</span>
                   </td>
-                  <td class="nowrap">{{ formatDate(project.latestRelease?.releasedAt) }}</td>
+                  <td
+                    class="nowrap"
+                    :title="formatTimeAgo(project.latestRelease?.releasedAt)"
+                  >
+                    {{ formatDate(project.latestRelease?.releasedAt) }}
+                  </td>
                 </tr>
               </tbody>
             </table>

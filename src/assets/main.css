@@ -977,6 +977,27 @@ select:focus {
   white-space: nowrap;
 }
 
+/* Three-column tables: label left, value centred, date right. */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  text-align: left;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  text-align: center;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+  text-align: right;
+}
+
+.data-table th:nth-child(1),
+.data-table th:nth-child(2) {
+  width: 33.333%;
+}
+
 .data-table td {
   padding: 0.58rem 0.65rem;
   border-bottom: 1px solid var(--border);

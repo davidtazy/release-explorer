@@ -29,16 +29,28 @@ export function formatDateTime(value: string | number | null | undefined): strin
 /** "just now", "3 hours ago", "2 days ago"… */
 export function formatRelativeTime(value: number | null | undefined): string {
   if (!value) return 'never'
+  return relativeFrom(value)
+}
 
-  const diff = value - Date.now()
+/** Relative label for any date string/timestamp, or `''` when it is missing. */
+export function formatTimeAgo(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === '') return ''
+  const date = toDate(value)
+  return date ? relativeFrom(date.getTime()) : ''
+}
+
+function relativeFrom(timestamp: number): string {
+  const diff = timestamp - Date.now()
   const absolute = Math.abs(diff)
 
   if (absolute < MINUTE) return 'just now'
   if (absolute < HOUR) return relativeFormatter.format(Math.round(diff / MINUTE), 'minute')
   if (absolute < DAY) return relativeFormatter.format(Math.round(diff / HOUR), 'hour')
   if (absolute < 30 * DAY) return relativeFormatter.format(Math.round(diff / DAY), 'day')
-
-  return formatDate(value)
+  if (absolute < 365 * DAY) {
+    return relativeFormatter.format(Math.round(diff / (30 * DAY)), 'month')
+  }
+  return relativeFormatter.format(Math.round(diff / (365 * DAY)), 'year')
 }
 
 export function formatBytes(bytes: number): string {

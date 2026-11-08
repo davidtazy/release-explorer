@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue'
 import { useReleasesStore } from '@/stores/releases'
-import { formatBytes, formatDate, formatDateTime, formatRelativeTime } from '@/lib/format'
+import { formatBytes, formatDate, formatDateTime, formatRelativeTime, formatTimeAgo } from '@/lib/format'
 
 const store = useReleasesStore()
 const summary = computed(() => store.storageSummary)
@@ -63,12 +63,20 @@ onUnmounted(() => {
       <div class="summary-row">
         <dt>Release dates</dt>
         <dd>
-          {{ formatDate(summary.oldestRelease) }} → {{ formatDate(summary.newestRelease) }}
+          <span :title="formatTimeAgo(summary.oldestRelease)">
+            {{ formatDate(summary.oldestRelease) }}
+          </span>
+          →
+          <span :title="formatTimeAgo(summary.newestRelease)">
+            {{ formatDate(summary.newestRelease) }}
+          </span>
         </dd>
       </div>
       <div class="summary-row">
         <dt>Captured</dt>
-        <dd>{{ formatDateTime(summary.firstCapture) }}</dd>
+        <dd :title="formatTimeAgo(summary.firstCapture)">
+          {{ formatDateTime(summary.firstCapture) }}
+        </dd>
       </div>
       <div class="summary-row">
         <dt>Last refresh</dt>

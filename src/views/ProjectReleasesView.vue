@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import EntityAvatar from '@/components/EntityAvatar.vue'
 import { isConnected } from '@/lib/auth'
-import { formatDate, formatDateTime, formatRelativeTime } from '@/lib/format'
+import { formatDate, formatDateTime, formatRelativeTime, formatTimeAgo } from '@/lib/format'
 import {
   PAGE_SIZE_OPTIONS,
   pageCountFor,
@@ -151,7 +151,7 @@ watch(pages, (count) => {
           <strong>{{ filtered.releases.length }}</strong>
           release{{ filtered.releases.length === 1 ? '' : 's' }}
           <template v-if="oldestFiltered !== null">
-            · oldest {{ formatDate(oldestFiltered) }}
+            · <span :title="formatTimeAgo(oldestFiltered)">oldest {{ formatDate(oldestFiltered) }}</span>
           </template>
         </span>
         <div class="view-controls">
@@ -211,7 +211,12 @@ watch(pages, (count) => {
                   <span v-else class="version-chip">{{ release.tagName }}</span>
                 </td>
                 <td>{{ release.name || '—' }}</td>
-                <td class="nowrap">{{ formatDateTime(release.releasedAt ?? release.createdAt) }}</td>
+                <td
+                  class="nowrap"
+                  :title="formatTimeAgo(release.releasedAt ?? release.createdAt)"
+                >
+                  {{ formatDateTime(release.releasedAt ?? release.createdAt) }}
+                </td>
               </tr>
             </tbody>
           </table>
