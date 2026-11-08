@@ -80,7 +80,7 @@ The fixture intentionally covers the UI cases:
 | `platform/web-app` | releases in every range (hours → >1 year); 25 in the last month for pagination |
 | `portal` | release within the last 24 hours |
 | `platform/api-service` | week/month ranges |
-| `platform/core/legacy-tool` | “Any time” fallback (nothing in the last year) |
+| `platform/core/legacy-tool` | nothing in the last year (empty Last year) |
 | `tools/cli` | a single recent release |
 | `tools/sandbox` | a project without any release |
 

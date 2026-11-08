@@ -1061,16 +1061,6 @@ a.version-chip:hover {
   text-decoration: none;
 }
 
-.notice {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: var(--radius-sm);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  font-size: 0.82rem;
-}
-
 @media (max-width: 520px) {
   .app-header {
     padding: 0.7rem 0.85rem;

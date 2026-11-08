@@ -22,14 +22,11 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   contain projects get an eye icon that shows or hides them again, independently
   of the selection checkbox.
 - **Project detail view** — click a project to see its releases with a range
-  filter: last day, week, month, year, or any time. The filter defaults to
+  filter: last day, week, month, or year. The filter defaults to
   **last month**; the toolbar shows how many releases match and the oldest
   release date in that period.
   - Standard pagination under the table: **rows per page** (a global, persisted
     preference), numbered pages, and previous/next controls.
-  - With **Any time**, only releases from the last 12 months are shown. If
-    there were none, the single latest release is shown instead (when the
-    project has at least one release).
 - **Persistent, timestamped cache** — fetched data is stored in `localStorage`
   together with `fetchedAt` timestamps. The cache is considered stale after
   **1 hour**; stale data is refreshed automatically on load, after selecting a

@@ -38,18 +38,16 @@ const projectGlobalId = computed(() => detail.value?.id || summary.value?.id || 
 const loading = computed(() => store.loadingDetails.includes(projectPath.value))
 const filtered = computed(() => filterReleases(detail.value?.releases ?? [], range.value))
 const oldestFiltered = computed(() => {
-  const releases = filtered.value.releases
+  const releases = filtered.value
   return releases.length > 0 ? releaseTimestamp(releases[releases.length - 1]!) : null
 })
-const pages = computed(() => pageCountFor(filtered.value.releases.length, pageSize.value))
+const pages = computed(() => pageCountFor(filtered.value.length, pageSize.value))
 const pagerItems = computed(() => pagerItemsFor(page.value, pages.value))
-const pageReleases = computed(() => paginate(filtered.value.releases, page.value, pageSize.value))
+const pageReleases = computed(() => paginate(filtered.value, page.value, pageSize.value))
 const rangeStart = computed(() =>
-  filtered.value.releases.length === 0 ? 0 : (page.value - 1) * pageSize.value + 1,
+  filtered.value.length === 0 ? 0 : (page.value - 1) * pageSize.value + 1,
 )
-const rangeEnd = computed(() =>
-  Math.min(page.value * pageSize.value, filtered.value.releases.length),
-)
+const rangeEnd = computed(() => Math.min(page.value * pageSize.value, filtered.value.length))
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 
@@ -148,8 +146,8 @@ watch(pages, (count) => {
 
       <div class="view-toolbar">
         <span class="muted">
-          <strong>{{ filtered.releases.length }}</strong>
-          release{{ filtered.releases.length === 1 ? '' : 's' }}
+          <strong>{{ filtered.length }}</strong>
+          release{{ filtered.length === 1 ? '' : 's' }}
           <template v-if="oldestFiltered !== null">
             · <span :title="formatTimeAgo(oldestFiltered)">oldest {{ formatDate(oldestFiltered) }}</span>
           </template>
@@ -171,10 +169,6 @@ watch(pages, (count) => {
       </div>
 
       <div class="panel">
-        <p v-if="filtered.fallbackToLatest" class="notice">
-          No releases in the last 12 months — showing the latest release only.
-        </p>
-
         <p v-if="loading && !detail" class="muted table-empty">Loading releases…</p>
         <p v-else-if="!detail && !isConnected" class="muted table-empty">
           Connect to GitLab in <RouterLink :to="{ name: 'preferences' }">Preferences</RouterLink> to
@@ -183,8 +177,8 @@ watch(pages, (count) => {
         <p v-else-if="!detail" class="muted table-empty">
           Release history is not available. See the error above.
         </p>
-        <p v-else-if="filtered.releases.length === 0" class="muted table-empty">
-          {{ range === 'any' ? 'This project has no releases.' : 'No releases in this period.' }}
+        <p v-else-if="filtered.length === 0" class="muted table-empty">
+          No releases in this period.
         </p>
 
         <div v-else class="table-scroll">
@@ -222,7 +216,7 @@ watch(pages, (count) => {
           </table>
         </div>
 
-        <div v-if="filtered.releases.length > 0" class="pagination">
+        <div v-if="filtered.length > 0" class="pagination">
           <label class="page-size">
             <span class="field-label">Rows per page</span>
             <select :value="pageSize" aria-label="Rows per page" @change="onPageSizeChange">
@@ -234,7 +228,7 @@ watch(pages, (count) => {
 
           <div class="pager">
             <span class="muted pager-range">
-              {{ rangeStart }}–{{ rangeEnd }} of {{ filtered.releases.length }}
+              {{ rangeStart }}–{{ rangeEnd }} of {{ filtered.length }}
             </span>
             <button
               type="button"

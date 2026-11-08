@@ -47,7 +47,6 @@ describe('releaseRangeCutoff', () => {
     expect(releaseRangeCutoff('1w', NOW)).toBe(NOW - 7 * DAY)
     expect(releaseRangeCutoff('1m', NOW)).toBe(NOW - 30 * DAY)
     expect(releaseRangeCutoff('1y', NOW)).toBe(NOW - 365 * DAY)
-    expect(releaseRangeCutoff('any', NOW)).toBe(NOW - 365 * DAY)
   })
 })
 
@@ -71,8 +70,7 @@ describe('filterReleases', () => {
       NOW,
     )
 
-    expect(result.releases.map((item) => item.tagName)).toEqual(['today'])
-    expect(result.fallbackToLatest).toBe(false)
+    expect(result.map((item) => item.tagName)).toEqual(['today'])
   })
 
   it.each([
@@ -86,35 +84,20 @@ describe('filterReleases', () => {
       NOW,
     )
 
-    expect(result.releases.map((item) => item.tagName)).toEqual(['in'])
+    expect(result.map((item) => item.tagName)).toEqual(['in'])
   })
 
-  it('"any" keeps releases from the last 12 months', () => {
+  it('sorts newest first and keeps everything inside the year', () => {
     const result = filterReleases(
-      [release('recent', 30), release('a-bit-old', 300), release('ancient', 500)],
-      'any',
+      [release('old', 300), release('new', 5), release('ancient', 500)],
+      '1y',
       NOW,
     )
 
-    expect(result.releases.map((item) => item.tagName)).toEqual(['recent', 'a-bit-old'])
-    expect(result.fallbackToLatest).toBe(false)
+    expect(result.map((item) => item.tagName)).toEqual(['new', 'old'])
   })
 
-  it('"any" falls back to the single latest release when the last year is empty', () => {
-    const result = filterReleases(
-      [release('newest', 500), release('older', 900)],
-      'any',
-      NOW,
-    )
-
-    expect(result.releases.map((item) => item.tagName)).toEqual(['newest'])
-    expect(result.fallbackToLatest).toBe(true)
-  })
-
-  it('"any" stays empty when the project has no releases', () => {
-    const result = filterReleases([], 'any', NOW)
-
-    expect(result.releases).toEqual([])
-    expect(result.fallbackToLatest).toBe(false)
+  it('stays empty when the project has no releases', () => {
+    expect(filterReleases([], '1m', NOW)).toEqual([])
   })
 })
