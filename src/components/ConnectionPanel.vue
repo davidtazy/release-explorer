@@ -50,7 +50,7 @@ function onDisconnect(): void {
   <section class="panel">
     <div class="panel-heading">
       <h2>Connection</h2>
-      <span v-if="isConnected" class="status-pill"><span class="status-dot" /> live</span>
+      <span v-if="isConnected" class="status-pill"><span class="status-dot" /> Live</span>
     </div>
 
     <template v-if="isConnected">

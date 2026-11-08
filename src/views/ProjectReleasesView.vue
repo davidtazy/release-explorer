@@ -146,11 +146,14 @@ watch(pages, (count) => {
 
       <div class="view-toolbar">
         <span class="muted">
-          <strong>{{ filtered.length }}</strong>
-          release{{ filtered.length === 1 ? '' : 's' }}
-          <template v-if="oldestFiltered !== null">
-            · <span :title="formatTimeAgo(oldestFiltered)">oldest {{ formatDate(oldestFiltered) }}</span>
+          <template v-if="detail">
+            <strong>{{ filtered.length }}</strong>
+            release{{ filtered.length === 1 ? '' : 's' }}
+            <template v-if="oldestFiltered !== null">
+              · <span :title="formatTimeAgo(oldestFiltered)">oldest {{ formatDate(oldestFiltered) }}</span>
+            </template>
           </template>
+          <template v-else>Loading releases…</template>
         </span>
         <div class="view-controls">
           <label class="sort-control">
