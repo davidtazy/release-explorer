@@ -14,7 +14,8 @@ export const OAUTH_SCOPE = 'read_api'
 /** Public OAuth application id (safe to expose in the browser). */
 export const clientId = (import.meta.env.VITE_GITLAB_CLIENT_ID ?? '').trim()
 export const isOAuthConfigured = clientId.length > 0
-const configuredInstance = (import.meta.env.VITE_GITLAB_INSTANCE_URL ?? '').trim()
+/** GitLab instance configured at build time (wins over the stored value). */
+const configuredGitLabUrl = (import.meta.env.VITE_GITLAB_URL ?? '').trim()
 
 function readSession(key: string): string {
   try {
@@ -79,11 +80,28 @@ export function instanceHost(instanceUrl: string): string {
 }
 
 /** Where GitLab sends the browser back after authorization. */
-export function callbackUrl(): string {
-  const base = import.meta.env.BASE_URL || '/'
+export interface CallbackUrlOptions {
+  redirectUri?: string
+  baseUrl?: string
+  origin?: string
+}
+
+/** Explicit redirect URI when provided, otherwise `<origin><base>callback`. */
+export function resolveCallbackUrl(options: CallbackUrlOptions): string {
+  const explicit = (options.redirectUri ?? '').trim()
+  if (explicit) return explicit
+
+  const base = options.baseUrl || '/'
   const path = base.endsWith('/') ? `${base}callback` : `${base}/callback`
-  if (typeof window === 'undefined') return path
-  return `${window.location.origin}${path}`
+  return `${options.origin ?? ''}${path}`
+}
+
+export function callbackUrl(): string {
+  return resolveCallbackUrl({
+    redirectUri: import.meta.env.VITE_REDIRECT_URI,
+    baseUrl: import.meta.env.BASE_URL,
+    origin: typeof window === 'undefined' ? '' : window.location.origin,
+  })
 }
 
 export interface AuthorizeUrlOptions {
@@ -134,7 +152,7 @@ const expiresAt = ref(Number(readSession(EXPIRES_KEY)) || 0)
 
 /** GitLab base URL, remembered across sessions but not secret. */
 export const instanceUrl = ref(
-  normalizeInstanceUrl(readLocal(INSTANCE_KEY) || configuredInstance || DEFAULT_INSTANCE),
+  normalizeInstanceUrl(configuredGitLabUrl || readLocal(INSTANCE_KEY) || DEFAULT_INSTANCE),
 )
 export const isConnected = computed(() => token.value.length > 0)
 

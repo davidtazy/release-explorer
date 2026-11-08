@@ -17,6 +17,8 @@ import { useReleasesStore } from '@/stores/releases'
 const store = useReleasesStore()
 const route = useRoute()
 
+const rocketUrl = `${import.meta.env.BASE_URL}rocket.svg`
+
 const authError = ref<string | null>(null)
 const startingLogin = ref(false)
 const signingOut = ref(false)
@@ -102,7 +104,7 @@ watch(
 <template>
   <div v-if="needsLogin" class="auth-screen">
     <section class="panel auth-card">
-      <img class="brand-mark" src="/rocket.svg" alt="" width="34" height="34" />
+      <img class="brand-mark" :src="rocketUrl" alt="" width="34" height="34" />
       <h1>Release Explorer</h1>
 
       <template v-if="authError">
@@ -117,7 +119,7 @@ watch(
 
   <div v-else-if="signedOut && !isConnected" class="auth-screen">
     <section class="panel auth-card">
-      <img class="brand-mark" src="/rocket.svg" alt="" width="34" height="34" />
+      <img class="brand-mark" :src="rocketUrl" alt="" width="34" height="34" />
       <h1>Signed out</h1>
       <p class="muted auth-message">
         Your GitLab session was cleared. Cached data stays on this browser, so signing back in
@@ -132,7 +134,7 @@ watch(
   <div v-else class="app-shell">
     <header class="app-header">
       <RouterLink to="/" class="brand">
-        <img class="brand-mark" src="/rocket.svg" alt="" width="34" height="34" />
+        <img class="brand-mark" :src="rocketUrl" alt="" width="34" height="34" />
         <span class="brand-text">
           <strong>Release Explorer</strong>
           <small>GitLab · read-only</small>

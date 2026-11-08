@@ -57,11 +57,11 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
 ## Requirements
 
 - Node.js 20+ and npm.
-- A GitLab **OAuth application** with the `read_api` scope and the redirect URI
-  `http://localhost:5173/callback`.
-- For self-managed GitLab, set `VITE_GITLAB_INSTANCE_URL` in `.env` and register
-  the OAuth application on that instance. The GraphQL and OAuth endpoints must
-  allow browser requests (CORS).
+- A GitLab **OAuth application** with the `read_api` scope and a redirect URI
+  that matches `VITE_REDIRECT_URI` (default `http://localhost:5173/callback`).
+- For self-managed GitLab, set `VITE_GITLAB_URL` in `.env` and register the
+  OAuth application on that instance. The GraphQL and OAuth endpoints must allow
+  browser requests (CORS).
 
 ## Getting started
 
@@ -70,7 +70,7 @@ Create the OAuth application in GitLab (User settings → Applications):
 | Field | Value |
 | --- | --- |
 | Name | Release Explorer |
-| Redirect URI | `http://localhost:5173/callback` |
+| Redirect URI | the value of `VITE_REDIRECT_URI`, e.g. `http://localhost:5173/callback` |
 | Scopes | `read_api` |
 
 Copy the **Application ID** into `.env`:
@@ -78,6 +78,41 @@ Copy the **Application ID** into `.env`:
 ```sh
 VITE_GITLAB_CLIENT_ID=your-application-id
 ```
+
+### Environment variables
+
+All values are read at dev-server start / build time, so restart after changing
+them.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `VITE_GITLAB_CLIENT_ID` | — | OAuth application id (public) |
+| `VITE_GITLAB_URL` | `https://gitlab.com` | GitLab instance; wins over the stored instance |
+| `VITE_APP_BASE_URL` | `/` | Path the app is served from, useful for subpath deployments |
+| `VITE_REDIRECT_URI` | `<origin><base>callback` | Exact OAuth callback; must match the GitLab application |
+
+Local development `.env`:
+
+```sh
+VITE_GITLAB_CLIENT_ID=...
+VITE_GITLAB_URL=https://gitlab.com
+VITE_APP_BASE_URL=/
+VITE_REDIRECT_URI=http://localhost:5173/callback
+```
+
+Production, served under a subpath:
+
+```sh
+VITE_GITLAB_CLIENT_ID=...
+VITE_GITLAB_URL=https://gitlab.example.com
+VITE_APP_BASE_URL=/release-explorer/
+VITE_REDIRECT_URI=https://apps.example.com/release-explorer/callback
+```
+
+`VITE_APP_BASE_URL` drives Vite's `base`, the router base, asset URLs and the
+default callback path; the deployment must serve the built app from that same
+path. `VITE_REDIRECT_URI` is used verbatim for both the authorize redirect and
+the token exchange.
 
 Then start the app:
 

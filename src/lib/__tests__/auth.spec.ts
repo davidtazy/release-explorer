@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { buildAuthorizeUrl, callbackUrl, clearSignedOut, logout, signedOut } from '@/lib/auth'
+import {
+  buildAuthorizeUrl,
+  clearSignedOut,
+  logout,
+  resolveCallbackUrl,
+  signedOut,
+} from '@/lib/auth'
 
 const options = {
   instanceUrl: 'https://gitlab.com',
@@ -33,9 +39,30 @@ describe('buildAuthorizeUrl', () => {
   })
 })
 
-describe('callbackUrl', () => {
-  it('points at the local /callback route', () => {
-    expect(callbackUrl()).toBe(`${window.location.origin}/callback`)
+describe('resolveCallbackUrl', () => {
+  it('prefers an explicit redirect URI', () => {
+    expect(
+      resolveCallbackUrl({
+        redirectUri: 'https://releases.example.com/oauth/callback',
+        baseUrl: '/app/',
+        origin: 'https://releases.example.com',
+      }),
+    ).toBe('https://releases.example.com/oauth/callback')
+  })
+
+  it('builds the callback from the origin and base path', () => {
+    expect(resolveCallbackUrl({ baseUrl: '/', origin: 'http://localhost:5173' })).toBe(
+      'http://localhost:5173/callback',
+    )
+    expect(resolveCallbackUrl({ baseUrl: '/app/', origin: 'https://example.com' })).toBe(
+      'https://example.com/app/callback',
+    )
+  })
+
+  it('adds a missing trailing slash to the base', () => {
+    expect(resolveCallbackUrl({ baseUrl: '/app', origin: 'https://example.com' })).toBe(
+      'https://example.com/app/callback',
+    )
   })
 })
 
