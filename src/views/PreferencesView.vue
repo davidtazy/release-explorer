@@ -4,9 +4,19 @@ import ConnectionPanel from '@/components/ConnectionPanel.vue'
 import GroupTree from '@/components/GroupTree.vue'
 import StoragePanel from '@/components/StoragePanel.vue'
 import { isConnected } from '@/lib/auth'
+import {
+  THEME_OPTIONS,
+  setThemePreference,
+  themePreference,
+  type ThemePreference,
+} from '@/lib/theme'
 import { useReleasesStore } from '@/stores/releases'
 
 const store = useReleasesStore()
+
+function onThemeChange(event: Event): void {
+  setThemePreference((event.target as HTMLSelectElement).value as ThemePreference)
+}
 </script>
 
 <template>
@@ -15,12 +25,29 @@ const store = useReleasesStore()
       <div class="detail-heading">
         <RouterLink class="back-link" :to="{ name: 'releases' }">← All projects</RouterLink>
         <h1>Preferences</h1>
-        <p class="muted view-subtitle">Connection, groups, and cached data for this browser.</p>
+        <p class="muted view-subtitle">
+          Appearance, connection, groups, and cached data for this browser.
+        </p>
       </div>
     </header>
 
     <div class="preferences-grid">
       <ConnectionPanel />
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Appearance</h2>
+        </div>
+        <label class="field">
+          <span class="field-label">Theme</span>
+          <select :value="themePreference" aria-label="Theme" @change="onThemeChange">
+            <option v-for="option in THEME_OPTIONS" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+        <p class="hint">System follows your operating system light or dark setting.</p>
+      </section>
 
       <section class="panel">
         <div class="panel-heading">

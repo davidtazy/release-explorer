@@ -2,6 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    <script>
+      try {
+        const preference = localStorage.getItem('gitlab-release-explorer.theme')
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        const dark = preference === 'dark' || (preference !== 'light' && systemDark)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="/rocket.svg">
     <meta name="theme-color" content="#0b1f3a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

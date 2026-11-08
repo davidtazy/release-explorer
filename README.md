@@ -27,6 +27,8 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   release date in that period.
   - Standard pagination under the table: **rows per page** (a global, persisted
     preference), numbered pages, and previous/next controls.
+- **Theme selector** — Light, Dark, or System (follows the operating system),
+  persisted in `localStorage` under `gitlab-release-explorer.theme`.
 - **Persistent, timestamped cache** — fetched data is stored in `localStorage`
   together with `fetchedAt` timestamps. The cache is considered stale after
   **1 hour**; stale data is refreshed automatically on load, after selecting a
@@ -175,7 +177,7 @@ scripts/
 src/
   api/gitlab.ts            GraphQL queries, client, error handling
   components/              Connection, group tree, storage, avatars
-  lib/                     auth, avatars, formatting, release filtering, grouping, tree helpers
+  lib/                     auth, avatars, formatting, pagination, release filtering, grouping, theme, tree helpers
   router/index.ts          "/" cards view, "/project?path=…", "/preferences"
   stores/releases.ts       Pinia store, persistence, staleness, refresh
   types/gitlab.ts          Data model
