@@ -8,16 +8,148 @@
       "daysAgo": 0.25
     },
     {
+      "tagName": "v2.3.22",
+      "name": "Web App 2.3.22",
+      "description": "Maintenance release 22: bug fixes and small UI polish.",
+      "daysAgo": 0.5
+    },
+    {
+      "tagName": "v2.3.21",
+      "name": "Web App 2.3.21",
+      "description": "Maintenance release 21: bug fixes and small UI polish.",
+      "daysAgo": 1.5
+    },
+    {
+      "tagName": "v2.3.20",
+      "name": "Web App 2.3.20",
+      "description": "Maintenance release 20: bug fixes and small UI polish.",
+      "daysAgo": 2.5
+    },
+    {
+      "tagName": "v2.3.19",
+      "name": "Web App 2.3.19",
+      "description": "Maintenance release 19: bug fixes and small UI polish.",
+      "daysAgo": 3.5
+    },
+    {
+      "tagName": "v2.3.18",
+      "name": "Web App 2.3.18",
+      "description": "Maintenance release 18: bug fixes and small UI polish.",
+      "daysAgo": 4.5
+    },
+    {
+      "tagName": "v2.3.17",
+      "name": "Web App 2.3.17",
+      "description": "Maintenance release 17: bug fixes and small UI polish.",
+      "daysAgo": 5.5
+    },
+    {
+      "tagName": "v2.3.16",
+      "name": "Web App 2.3.16",
+      "description": "Maintenance release 16: bug fixes and small UI polish.",
+      "daysAgo": 6.5
+    },
+    {
+      "tagName": "v2.3.15",
+      "name": "Web App 2.3.15",
+      "description": "Maintenance release 15: bug fixes and small UI polish.",
+      "daysAgo": 7.5
+    },
+    {
+      "tagName": "v2.3.14",
+      "name": "Web App 2.3.14",
+      "description": "Maintenance release 14: bug fixes and small UI polish.",
+      "daysAgo": 8.5
+    },
+    {
+      "tagName": "v2.3.13",
+      "name": "Web App 2.3.13",
+      "description": "Maintenance release 13: bug fixes and small UI polish.",
+      "daysAgo": 9.5
+    },
+    {
+      "tagName": "v2.3.12",
+      "name": "Web App 2.3.12",
+      "description": "Maintenance release 12: bug fixes and small UI polish.",
+      "daysAgo": 10.5
+    },
+    {
+      "tagName": "v2.3.11",
+      "name": "Web App 2.3.11",
+      "description": "Maintenance release 11: bug fixes and small UI polish.",
+      "daysAgo": 11.5
+    },
+    {
+      "tagName": "v2.3.10",
+      "name": "Web App 2.3.10",
+      "description": "Maintenance release 10: bug fixes and small UI polish.",
+      "daysAgo": 12.5
+    },
+    {
+      "tagName": "v2.3.9",
+      "name": "Web App 2.3.9",
+      "description": "Maintenance release 9: bug fixes and small UI polish.",
+      "daysAgo": 13.5
+    },
+    {
+      "tagName": "v2.3.8",
+      "name": "Web App 2.3.8",
+      "description": "Maintenance release 8: bug fixes and small UI polish.",
+      "daysAgo": 14.5
+    },
+    {
+      "tagName": "v2.3.7",
+      "name": "Web App 2.3.7",
+      "description": "Maintenance release 7: bug fixes and small UI polish.",
+      "daysAgo": 15.5
+    },
+    {
+      "tagName": "v2.3.6",
+      "name": "Web App 2.3.6",
+      "description": "Maintenance release 6: bug fixes and small UI polish.",
+      "daysAgo": 16.5
+    },
+    {
+      "tagName": "v2.3.5",
+      "name": "Web App 2.3.5",
+      "description": "Maintenance release 5: bug fixes and small UI polish.",
+      "daysAgo": 17.5
+    },
+    {
+      "tagName": "v2.3.4",
+      "name": "Web App 2.3.4",
+      "description": "Maintenance release 4: bug fixes and small UI polish.",
+      "daysAgo": 18.5
+    },
+    {
+      "tagName": "v2.3.3",
+      "name": "Web App 2.3.3",
+      "description": "Maintenance release 3: bug fixes and small UI polish.",
+      "daysAgo": 19.5
+    },
+    {
+      "tagName": "v2.3.2",
+      "name": "Web App 2.3.2",
+      "description": "Maintenance release 2: bug fixes and small UI polish.",
+      "daysAgo": 20.5
+    },
+    {
+      "tagName": "v2.3.1",
+      "name": "Web App 2.3.1",
+      "description": "Maintenance release 1: bug fixes and small UI polish.",
+      "daysAgo": 21.5
+    },
+    {
       "tagName": "v2.3.0",
       "name": "Web App 2.3.0",
       "description": "Performance pass on the project table.",
-      "daysAgo": 3
+      "daysAgo": 22
     },
     {
       "tagName": "v2.2.0",
       "name": "Web App 2.2.0",
       "description": "Dark mode and keyboard shortcuts.",
-      "daysAgo": 10
+      "daysAgo": 28
     },
     {
       "tagName": "v2.1.0",

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { ReleaseInfo } from '@/types/gitlab'
-import { filterReleases, releaseTimestamp, sortReleasesDesc } from '@/lib/releases'
+import {
+  filterReleases,
+  mergeReleases,
+  releaseRangeCutoff,
+  releaseTimestamp,
+  sortReleasesDesc,
+} from '@/lib/releases'
 
 const NOW = Date.parse('2026-06-15T12:00:00Z')
 const DAY = 86_400_000
@@ -32,6 +38,28 @@ describe('sortReleasesDesc', () => {
 
     expect(sorted.map((item) => item.tagName)).toEqual(['new', 'middle', 'old'])
     expect(input.map((item) => item.tagName)).toEqual(['old', 'new', 'middle'])
+  })
+})
+
+describe('releaseRangeCutoff', () => {
+  it('returns the start of each range', () => {
+    expect(releaseRangeCutoff('1d', NOW)).toBe(NOW - DAY)
+    expect(releaseRangeCutoff('1w', NOW)).toBe(NOW - 7 * DAY)
+    expect(releaseRangeCutoff('1m', NOW)).toBe(NOW - 30 * DAY)
+    expect(releaseRangeCutoff('1y', NOW)).toBe(NOW - 365 * DAY)
+    expect(releaseRangeCutoff('any', NOW)).toBe(NOW - 365 * DAY)
+  })
+})
+
+describe('mergeReleases', () => {
+  it('merges pages by tag, newest first, without duplicates', () => {
+    const firstPage = [release('v3', 1), release('v2', 10)]
+    const secondPage = [release('v2', 10), release('v1', 100)]
+
+    const merged = mergeReleases(firstPage, secondPage)
+
+    expect(merged.map((item) => item.tagName)).toEqual(['v3', 'v2', 'v1'])
+    expect(firstPage.map((item) => item.tagName)).toEqual(['v3', 'v2'])
   })
 })
 

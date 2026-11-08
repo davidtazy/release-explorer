@@ -1,4 +1,5 @@
 import { graphqlEndpoint } from '@/lib/auth'
+import { mergeReleases } from '@/lib/releases'
 import type {
   GroupInfo,
   GitLabUser,
@@ -32,7 +33,7 @@ export class GitLabApiError extends Error {
   }
 }
 
-export const RELEASES_PER_PROJECT = 20
+export const RELEASES_PAGE_SIZE = 100
 const MAX_PAGES = 50
 
 const GROUPS_QUERY = /* GraphQL */ `
@@ -91,13 +92,17 @@ const GROUP_PROJECTS_QUERY = /* GraphQL */ `
 `
 
 const PROJECT_RELEASES_QUERY = /* GraphQL */ `
-  query ReleaseExplorerProjectReleases($fullPath: ID!, $first: Int!) {
+  query ReleaseExplorerProjectReleases($fullPath: ID!, $first: Int!, $after: String) {
     project(fullPath: $fullPath) {
       id
       name
       fullPath
       webUrl
-      releases(first: $first, sort: RELEASED_AT_DESC) {
+      releases(first: $first, after: $after, sort: RELEASED_AT_DESC) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         nodes {
           tagName
           name
@@ -166,7 +171,7 @@ interface ProjectReleasesData {
     name: string
     fullPath: string
     webUrl: string | null
-    releases: { nodes: RawRelease[] }
+    releases: { pageInfo: PageInfo; nodes: RawRelease[] }
   } | null
 }
 
@@ -332,28 +337,44 @@ export async function fetchGroupSnapshot(
   return [...projects.values()]
 }
 
-/** The most recent releases of a single project (used by the detail view). */
+/** Every release of one project (cursor-paginated internally), for the detail view. */
 export async function fetchProjectDetails(
   context: GitLabContext,
   projectPath: string,
-  first: number = RELEASES_PER_PROJECT,
 ): Promise<ProjectDetailCache> {
-  const limit = Math.min(Math.max(Math.trunc(first), 1), 100)
-  const data = await graphqlRequest<ProjectReleasesData>(context, PROJECT_RELEASES_QUERY, {
-    fullPath: projectPath,
-    first: limit,
-  })
+  const releases: ReleaseInfo[] = []
+  let project: ProjectReleasesData['project'] = null
+  let after: string | null = null
 
-  if (!data.project) {
+  for (let page = 0; page < MAX_PAGES; page += 1) {
+    const data: ProjectReleasesData = await graphqlRequest<ProjectReleasesData>(
+      context,
+      PROJECT_RELEASES_QUERY,
+      { fullPath: projectPath, first: RELEASES_PAGE_SIZE, after },
+    )
+
+    if (!data.project) {
+      throw new GitLabApiError(`Project "${projectPath}" was not found or is not accessible.`)
+    }
+
+    project = data.project
+    releases.push(...data.project.releases.nodes.map(mapRelease))
+
+    const pageInfo = data.project.releases.pageInfo
+    if (!pageInfo.hasNextPage || !pageInfo.endCursor) break
+    after = pageInfo.endCursor
+  }
+
+  if (!project) {
     throw new GitLabApiError(`Project "${projectPath}" was not found or is not accessible.`)
   }
 
   return {
-    id: data.project.id,
+    id: project.id,
     projectPath,
     fetchedAt: Date.now(),
-    name: data.project.name,
-    webUrl: data.project.webUrl ?? '',
-    releases: data.project.releases.nodes.map(mapRelease),
+    name: project.name,
+    webUrl: project.webUrl ?? '',
+    releases: mergeReleases([], releases),
   }
 }

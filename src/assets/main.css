@@ -887,6 +887,78 @@ select:focus {
   overflow-x: auto;
 }
 
+/* ------------------------------------------------------------ pagination */
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  margin-top: 0.85rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.page-size {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.page-size select {
+  width: auto;
+  min-width: 4.5rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pager-range {
+  margin-right: 0.4rem;
+}
+
+.page-btn {
+  min-width: 1.9rem;
+  height: 1.9rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.page-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.page-btn.is-current {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.page-gap {
+  padding: 0 0.2rem;
+  color: var(--muted);
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

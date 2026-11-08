@@ -77,12 +77,16 @@ The fixture intentionally covers the UI cases:
 
 | Project | What it exercises |
 | --- | --- |
-| `platform/web-app` | releases in every range (hours → >1 year) |
+| `platform/web-app` | releases in every range (hours → >1 year); 25 in the last month for pagination |
 | `portal` | release within the last 24 hours |
 | `platform/api-service` | week/month ranges |
 | `platform/core/legacy-tool` | “Any time” fallback (nothing in the last year) |
 | `tools/cli` | a single recent release |
 | `tools/sandbox` | a project without any release |
+
+`platform/web-app` has 28 releases. The detail view loads the full history once
+and paginates it locally, so the default **Last month** filter spans 25 of them
+and shows two pages at 20 rows per page.
 
 ## Seeding GitLab
 

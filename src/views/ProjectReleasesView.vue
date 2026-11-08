@@ -1,18 +1,32 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { RELEASES_PER_PROJECT } from '@/api/gitlab'
 import EntityAvatar from '@/components/EntityAvatar.vue'
 import { isConnected } from '@/lib/auth'
-import { formatDateTime, formatRelativeTime } from '@/lib/format'
-import { RELEASE_RANGE_OPTIONS, filterReleases, type ReleaseRange } from '@/lib/releases'
+import { formatDate, formatDateTime, formatRelativeTime } from '@/lib/format'
+import {
+  PAGE_SIZE_OPTIONS,
+  pageCountFor,
+  paginate,
+  pagerItemsFor,
+  readPageSize,
+  writePageSize,
+} from '@/lib/pagination'
+import {
+  RELEASE_RANGE_OPTIONS,
+  filterReleases,
+  releaseTimestamp,
+  type ReleaseRange,
+} from '@/lib/releases'
 import { useReleasesStore } from '@/stores/releases'
 
 const route = useRoute()
 const store = useReleasesStore()
 
 const projectPath = computed(() => (typeof route.query.path === 'string' ? route.query.path : ''))
-const range = ref<ReleaseRange>('any')
+const range = ref<ReleaseRange>('1m')
+const page = ref(1)
+const pageSize = ref(readPageSize())
 
 const detail = computed(() => store.details[projectPath.value])
 const summary = computed(() => store.findProject(projectPath.value))
@@ -23,7 +37,19 @@ const projectWebUrl = computed(() => detail.value?.webUrl || summary.value?.webU
 const projectGlobalId = computed(() => detail.value?.id || summary.value?.id || '')
 const loading = computed(() => store.loadingDetails.includes(projectPath.value))
 const filtered = computed(() => filterReleases(detail.value?.releases ?? [], range.value))
-const fetchedCount = computed(() => detail.value?.releases.length ?? 0)
+const oldestFiltered = computed(() => {
+  const releases = filtered.value.releases
+  return releases.length > 0 ? releaseTimestamp(releases[releases.length - 1]!) : null
+})
+const pages = computed(() => pageCountFor(filtered.value.releases.length, pageSize.value))
+const pagerItems = computed(() => pagerItemsFor(page.value, pages.value))
+const pageReleases = computed(() => paginate(filtered.value.releases, page.value, pageSize.value))
+const rangeStart = computed(() =>
+  filtered.value.releases.length === 0 ? 0 : (page.value - 1) * pageSize.value + 1,
+)
+const rangeEnd = computed(() =>
+  Math.min(page.value * pageSize.value, filtered.value.releases.length),
+)
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 
@@ -33,6 +59,17 @@ function refresh(): void {
 
 function onRangeChange(event: Event): void {
   range.value = (event.target as HTMLSelectElement).value as ReleaseRange
+}
+
+function onPageSizeChange(event: Event): void {
+  const size = Number((event.target as HTMLSelectElement).value)
+  pageSize.value = size
+  writePageSize(size)
+}
+
+function goToPage(target: number | 'gap'): void {
+  if (typeof target !== 'number') return
+  page.value = Math.min(Math.max(target, 1), pages.value)
 }
 
 function releaseHref(tagName: string): string {
@@ -52,8 +89,17 @@ onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
 })
 
+watch([range, pageSize], () => {
+  page.value = 1
+})
+
 watch(projectPath, (path) => {
+  page.value = 1
   if (path) void store.ensureDetail(path)
+})
+
+watch(pages, (count) => {
+  if (page.value > count) page.value = count
 })
 </script>
 
@@ -102,8 +148,11 @@ watch(projectPath, (path) => {
 
       <div class="view-toolbar">
         <span class="muted">
-          Fetched the {{ fetchedCount }} most recent release{{ fetchedCount === 1 ? '' : 's' }}
-          (max {{ RELEASES_PER_PROJECT }})
+          <strong>{{ filtered.releases.length }}</strong>
+          release{{ filtered.releases.length === 1 ? '' : 's' }}
+          <template v-if="oldestFiltered !== null">
+            · oldest {{ formatDate(oldestFiltered) }}
+          </template>
         </span>
         <div class="view-controls">
           <label class="sort-control">
@@ -148,7 +197,7 @@ watch(projectPath, (path) => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="release in filtered.releases" :key="release.tagName">
+              <tr v-for="release in pageReleases" :key="release.tagName">
                 <td>
                   <a
                     v-if="releaseHref(release.tagName)"
@@ -166,6 +215,54 @@ watch(projectPath, (path) => {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div v-if="filtered.releases.length > 0" class="pagination">
+          <label class="page-size">
+            <span class="field-label">Rows per page</span>
+            <select :value="pageSize" aria-label="Rows per page" @change="onPageSizeChange">
+              <option v-for="size in PAGE_SIZE_OPTIONS" :key="size" :value="size">
+                {{ size }}
+              </option>
+            </select>
+          </label>
+
+          <div class="pager">
+            <span class="muted pager-range">
+              {{ rangeStart }}–{{ rangeEnd }} of {{ filtered.releases.length }}
+            </span>
+            <button
+              type="button"
+              class="page-btn"
+              :disabled="page <= 1"
+              aria-label="Previous page"
+              @click="goToPage(page - 1)"
+            >
+              ‹
+            </button>
+            <template v-for="(item, index) in pagerItems" :key="`${item}-${index}`">
+              <span v-if="item === 'gap'" class="page-gap" aria-hidden="true">…</span>
+              <button
+                v-else
+                type="button"
+                class="page-btn"
+                :class="{ 'is-current': item === page }"
+                :aria-current="item === page ? 'page' : undefined"
+                @click="goToPage(item)"
+              >
+                {{ item }}
+              </button>
+            </template>
+            <button
+              type="button"
+              class="page-btn"
+              :disabled="page >= pages"
+              aria-label="Next page"
+              @click="goToPage(page + 1)"
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
     </template>

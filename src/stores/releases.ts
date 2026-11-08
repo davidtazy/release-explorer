@@ -1,7 +1,6 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import {
-  RELEASES_PER_PROJECT,
   fetchGroupSnapshot,
   fetchGroups,
   fetchProjectDetails,
@@ -60,7 +59,18 @@ function readPersisted(): PersistedState | null {
           : {},
       details:
         parsed.details && typeof parsed.details === 'object'
-          ? (parsed.details as Record<string, ProjectDetailCache>)
+          ? Object.fromEntries(
+              Object.entries(parsed.details as Record<string, ProjectDetailCache>).map(
+                ([path, detail]) => [
+                  path,
+                  {
+                    ...detail,
+                    id: detail.id ?? '',
+                    releases: Array.isArray(detail.releases) ? detail.releases : [],
+                  },
+                ],
+              ),
+            )
           : {},
     }
   } catch {
@@ -316,7 +326,7 @@ export const useReleasesStore = defineStore('releases', () => {
     error.value = null
 
     try {
-      const detail = await fetchProjectDetails(context(), projectPath, RELEASES_PER_PROJECT)
+      const detail = await fetchProjectDetails(context(), projectPath)
       details.value = { ...details.value, [projectPath]: detail }
     } catch (caught) {
       error.value = describeError(caught)

@@ -33,6 +33,23 @@ export function releaseTimestamp(release: ReleaseInfo): number | null {
   return Number.isNaN(timestamp) ? null : timestamp
 }
 
+/** Oldest instant that belongs to a range: `Date.now() - range length`. */
+export function releaseRangeCutoff(range: ReleaseRange, now: number = Date.now()): number {
+  if (range === 'any') return now - ONE_YEAR
+  return now - DAYS_BY_RANGE[range] * DAY
+}
+
+/** Merge two pages of releases, newest first, without duplicate tags. */
+export function mergeReleases(
+  existing: readonly ReleaseInfo[],
+  incoming: readonly ReleaseInfo[],
+): ReleaseInfo[] {
+  const byTag = new Map<string, ReleaseInfo>()
+  for (const release of existing) byTag.set(release.tagName, release)
+  for (const release of incoming) byTag.set(release.tagName, release)
+  return sortReleasesDesc([...byTag.values()])
+}
+
 export function sortReleasesDesc(releases: readonly ReleaseInfo[]): ReleaseInfo[] {
   return [...releases].sort(
     (left, right) => (releaseTimestamp(right) ?? 0) - (releaseTimestamp(left) ?? 0),
@@ -56,7 +73,7 @@ export function filterReleases(
   const sorted = sortReleasesDesc(releases)
 
   if (range === 'any') {
-    const cutoff = now - ONE_YEAR
+    const cutoff = releaseRangeCutoff('any', now)
     const withinLastYear = sorted.filter((release) => {
       const timestamp = releaseTimestamp(release)
       return timestamp !== null && timestamp >= cutoff
@@ -69,7 +86,7 @@ export function filterReleases(
     return { releases: sorted.slice(0, 1), fallbackToLatest: true }
   }
 
-  const cutoff = now - DAYS_BY_RANGE[range] * DAY
+  const cutoff = releaseRangeCutoff(range, now)
   const filtered = sorted.filter((release) => {
     const timestamp = releaseTimestamp(release)
     return timestamp !== null && timestamp >= cutoff

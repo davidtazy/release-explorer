@@ -21,8 +21,12 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   subgroups stay visible. In Preferences → Your groups, groups that directly
   contain projects get an eye icon that shows or hides them again, independently
   of the selection checkbox.
-- **Project detail view** — click a project to see its most recent releases
-  (up to 20) with a range filter: last day, week, month, year, or any time.
+- **Project detail view** — click a project to see its releases with a range
+  filter: last day, week, month, year, or any time. The filter defaults to
+  **last month**; the toolbar shows how many releases match and the oldest
+  release date in that period.
+  - Standard pagination under the table: **rows per page** (a global, persisted
+    preference), numbered pages, and previous/next controls.
   - With **Any time**, only releases from the last 12 months are shown. If
     there were none, the single latest release is shown instead (when the
     project has at least one release).
@@ -125,9 +129,10 @@ there is no per-project N+1 fan-out:
    This powers the project/latest-release table in one request (per page of
    projects).
 3. `ReleaseExplorerProjectReleases` — `project(fullPath: $fullPath)
-   .releases(first: $first, sort: RELEASED_AT_DESC)` for the detail view
-   (`RELEASES_PER_PROJECT = 20`). Filtering by date range happens client-side on
-   this fetched window.
+   .releases(first: 100, after: $after, sort: RELEASED_AT_DESC)` with
+   `pageInfo`. The client follows the cursor until every release is fetched
+   (capped by `MAX_PAGES`), then the detail view filters by date range and
+   paginates the result locally.
 
 Requests are sent to `<instance>/api/graphql` with
 `Authorization: Bearer <token>`.
