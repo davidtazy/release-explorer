@@ -33,7 +33,8 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   **1 hour**; stale data is refreshed automatically on load, after selecting a
   group, and by a once-a-minute check.
 - **Group and project avatars** — logos uploaded to GitLab are downloaded with
-  the same token and shown left of group and project names.
+  the same token and shown left of group and project names; the header user
+  button shows the signed-in user's GitLab avatar.
 - **Manual refresh** — **Refresh groups & releases** on the main view refetches
   the group list and every selected group snapshot; **Refresh release history**
   on a project page refetches that project's releases only.

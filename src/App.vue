@@ -29,6 +29,10 @@ const needsLogin = computed(
     route.name !== 'callback' &&
     route.matched.length > 0,
 )
+const userInitial = computed(() => {
+  const label = store.user?.name || store.user?.username || '?'
+  return label.trim().charAt(0).toUpperCase() || '?'
+})
 
 let autoRefreshTimer: ReturnType<typeof setInterval> | undefined
 
@@ -148,7 +152,19 @@ watch(
           :class="{ 'is-offline': !isConnected }"
           title="Open preferences"
         >
-          <span v-if="isConnected" class="status-dot" />
+          <template v-if="isConnected">
+            <img
+              v-if="store.user?.avatarUrl"
+              class="user-avatar"
+              :src="store.user.avatarUrl"
+              alt=""
+              width="20"
+              height="20"
+            />
+            <span v-else class="user-avatar user-avatar-fallback" aria-hidden="true">
+              {{ userInitial }}
+            </span>
+          </template>
           {{ isConnected ? (store.user ? `@${store.user.username}` : instanceHost(instanceUrl)) : 'Not connected' }}
         </RouterLink>
 

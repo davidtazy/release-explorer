@@ -41,6 +41,7 @@ const GROUPS_QUERY = /* GraphQL */ `
       id
       username
       name
+      avatarUrl
       groups(first: 100, after: $after, sort: NAME_ASC) {
         pageInfo {
           hasNextPage
@@ -151,6 +152,7 @@ interface GroupsData {
     id: string
     username: string
     name: string
+    avatarUrl: string | null
     groups: RawConnection<RawGroup>
   } | null
 }
@@ -289,6 +291,7 @@ export async function fetchGroups(
       id: data.currentUser.id,
       username: data.currentUser.username,
       name: data.currentUser.name,
+      avatarUrl: data.currentUser.avatarUrl ?? '',
     }
 
     for (const group of data.currentUser.groups.nodes) {

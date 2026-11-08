@@ -44,7 +44,7 @@ function readPersisted(): PersistedState | null {
     return {
       version: STATE_VERSION,
       instanceUrl: parsed.instanceUrl,
-      user: parsed.user ?? null,
+      user: parsed.user ? { ...parsed.user, avatarUrl: parsed.user.avatarUrl ?? '' } : null,
       groups: Array.isArray(parsed.groups)
         ? parsed.groups.map((group) => ({
             ...group,
