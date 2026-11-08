@@ -14,6 +14,7 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
+    "logos:fake-gitlab": "node scripts/make-fake-logos.mjs",
     "seed:fake-gitlab": "node scripts/seed-fake-gitlab.mjs",
     "seed:fake-gitlab:dry": "node scripts/seed-fake-gitlab.mjs --dry-run"
   },

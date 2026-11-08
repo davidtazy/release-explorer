@@ -257,6 +257,7 @@ function mapGroup(group: RawGroup): GroupInfo {
     fullPath: group.fullPath,
     webUrl: group.webUrl ?? '',
     parentPath: group.parent?.fullPath ?? null,
+    visible: true,
   }
 }
 
@@ -348,6 +349,7 @@ export async function fetchProjectDetails(
   }
 
   return {
+    id: data.project.id,
     projectPath,
     fetchedAt: Date.now(),
     name: data.project.name,

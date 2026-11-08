@@ -19,6 +19,11 @@ export interface GroupInfo {
   webUrl: string
   /** Full path of the parent group, or `null` for a root group. */
   parentPath: string | null
+  /**
+   * Whether the group's own projects appear in the main view. Hiding a group
+   * only hides its direct projects; its subgroups keep their own flag.
+   */
+  visible: boolean
 }
 
 export interface ReleaseInfo {
@@ -46,6 +51,7 @@ export interface GroupSnapshot {
 
 /** Detailed release list for one project, fetched when opening the detail view. */
 export interface ProjectDetailCache {
+  id: string
   projectPath: string
   fetchedAt: number
   name: string

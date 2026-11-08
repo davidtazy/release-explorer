@@ -2,7 +2,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import { instanceHost, isConnected, instanceUrl } from '@/lib/auth'
-import { formatRelativeTime } from '@/lib/format'
 import { useReleasesStore } from '@/stores/releases'
 
 const store = useReleasesStore()
@@ -39,19 +38,6 @@ onUnmounted(() => {
       </RouterLink>
 
       <div class="header-actions">
-        <button
-          type="button"
-          class="btn btn-primary"
-          :disabled="!isConnected || store.loading"
-          @click="store.refreshAll()"
-        >
-          {{ store.loading ? 'Refreshing…' : 'Refresh' }}
-        </button>
-
-        <span v-if="store.lastRefresh" class="updated muted">
-          Updated {{ formatRelativeTime(store.lastRefresh) }}
-        </span>
-
         <RouterLink
           to="/preferences"
           class="connection-pill"

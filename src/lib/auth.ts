@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { resetAvatarCache } from '@/lib/avatars'
 
 const TOKEN_KEY = 'gitlab-release-explorer.token'
 const INSTANCE_KEY = 'gitlab-release-explorer.instance'
@@ -74,6 +75,7 @@ export const instanceUrl = ref(normalizeInstanceUrl(readLocal(INSTANCE_KEY) || D
 export const isConnected = computed(() => token.value.length > 0)
 
 export function connect(url: string, personalAccessToken: string): void {
+  resetAvatarCache()
   instanceUrl.value = normalizeInstanceUrl(url)
   token.value = personalAccessToken.trim()
   writeLocal(INSTANCE_KEY, instanceUrl.value)
@@ -81,6 +83,7 @@ export function connect(url: string, personalAccessToken: string): void {
 }
 
 export function disconnect(): void {
+  resetAvatarCache()
   token.value = ''
   writeSession(TOKEN_KEY, '')
 }

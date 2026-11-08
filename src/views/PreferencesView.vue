@@ -30,13 +30,16 @@ const store = useReleasesStore()
         <GroupTree
           :groups="store.groups"
           :selected-paths="store.selectedPaths"
+          :groups-with-projects="store.groupsWithProjects"
           :busy-paths="store.loadingSnapshots"
           :loading="store.loadingGroups"
           :connected="isConnected"
           @toggle="store.toggleGroup"
+          @toggle-visibility="store.toggleGroupVisibility"
         />
         <p v-if="isConnected && store.groups.length > 0" class="hint">
-          Selecting a parent group includes all of its subgroups.
+          Tick a group to load it (a parent includes its subgroups). The eye icon shows or hides a
+          group's own projects in the main view; subgroups keep their own setting.
         </p>
       </section>
 

@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { RELEASES_PER_PROJECT } from '@/api/gitlab'
+import EntityAvatar from '@/components/EntityAvatar.vue'
 import { isConnected } from '@/lib/auth'
 import { formatDateTime, formatRelativeTime } from '@/lib/format'
 import { RELEASE_RANGE_OPTIONS, filterReleases, type ReleaseRange } from '@/lib/releases'
@@ -19,6 +20,7 @@ const projectName = computed(
   () => detail.value?.name ?? summary.value?.name ?? projectPath.value,
 )
 const projectWebUrl = computed(() => detail.value?.webUrl || summary.value?.webUrl || '')
+const projectGlobalId = computed(() => detail.value?.id || summary.value?.id || '')
 const loading = computed(() => store.loadingDetails.includes(projectPath.value))
 const filtered = computed(() => filterReleases(detail.value?.releases ?? [], range.value))
 const fetchedCount = computed(() => detail.value?.releases.length ?? 0)
@@ -66,7 +68,10 @@ watch(projectPath, (path) => {
       <header class="view-header">
         <div class="detail-heading">
           <RouterLink class="back-link" :to="{ name: 'releases' }">← All projects</RouterLink>
-          <h1>{{ projectName }}</h1>
+          <div class="detail-title">
+            <EntityAvatar kind="project" :global-id="projectGlobalId" :name="projectName" size="md" />
+            <h1>{{ projectName }}</h1>
+          </div>
           <p class="muted detail-subtitle">
             <span class="mono">{{ projectPath }}</span>
             <a
@@ -90,7 +95,7 @@ watch(projectPath, (path) => {
             :disabled="!isConnected || loading"
             @click="refresh"
           >
-            {{ loading ? 'Refreshing…' : 'Refresh' }}
+            {{ loading ? 'Refreshing release history…' : 'Refresh release history' }}
           </button>
         </div>
       </header>

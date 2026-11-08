@@ -8,6 +8,7 @@ import {
   type GitLabContext,
 } from '@/api/gitlab'
 import { instanceUrl, isConnected, token } from '@/lib/auth'
+import { filterInvisibleProjects, groupPathsWithProjects } from '@/lib/projects'
 import { releaseTimestamp } from '@/lib/releases'
 import {
   STATE_VERSION,
@@ -32,15 +33,25 @@ function readPersisted(): PersistedState | null {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
 
-    const parsed = JSON.parse(raw) as Partial<PersistedState>
+    const parsed = JSON.parse(raw) as Partial<PersistedState> & { hiddenPaths?: unknown }
     if (parsed.version !== STATE_VERSION) return null
     if (typeof parsed.instanceUrl !== 'string' || parsed.instanceUrl !== instanceUrl.value) return null
+
+    // Older versions stored a flat hiddenPaths list; fold it into group.visible.
+    const legacyHidden = new Set(
+      Array.isArray(parsed.hiddenPaths) ? (parsed.hiddenPaths as string[]) : [],
+    )
 
     return {
       version: STATE_VERSION,
       instanceUrl: parsed.instanceUrl,
       user: parsed.user ?? null,
-      groups: Array.isArray(parsed.groups) ? parsed.groups : [],
+      groups: Array.isArray(parsed.groups)
+        ? parsed.groups.map((group) => ({
+            ...group,
+            visible: group.visible !== false && !legacyHidden.has(group.fullPath),
+          }))
+        : [],
       groupsFetchedAt: typeof parsed.groupsFetchedAt === 'number' ? parsed.groupsFetchedAt : null,
       selectedPaths: Array.isArray(parsed.selectedPaths) ? parsed.selectedPaths : [],
       snapshots:
@@ -144,10 +155,15 @@ export const useReleasesStore = defineStore('releases', () => {
       for (const project of snapshot.projects) byPath.set(project.fullPath, project)
     }
 
-    return [...byPath.values()].sort((left, right) => left.name.localeCompare(right.name))
+    return filterInvisibleProjects([...byPath.values()], groups.value).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )
   })
 
   const loading = computed(() => loadingGroups.value || loadingSnapshots.value.length > 0)
+
+  /** Parent groups that directly contain at least one cached project. */
+  const groupsWithProjects = computed<string[]>(() => groupPathsWithProjects(snapshots.value))
 
   const lastRefresh = computed<number | null>(() => {
     const timestamps = [
@@ -233,8 +249,13 @@ export const useReleasesStore = defineStore('releases', () => {
 
     try {
       const result = await fetchGroups(context())
+      const previousVisibility = new Map(groups.value.map((group) => [group.fullPath, group.visible]))
+
       user.value = result.user
-      groups.value = result.groups
+      groups.value = result.groups.map((group) => ({
+        ...group,
+        visible: previousVisibility.get(group.fullPath) ?? group.visible,
+      }))
       groupsFetchedAt.value = Date.now()
 
       const knownGroupPaths = new Set(result.groups.map((group) => group.fullPath))
@@ -304,6 +325,24 @@ export const useReleasesStore = defineStore('releases', () => {
     }
   }
 
+  /** Show/hide a group's own projects. Subgroups keep their own flag. */
+  function setGroupVisibility(path: string, visible: boolean): void {
+    groups.value = groups.value.map((group) =>
+      group.fullPath === path ? { ...group, visible } : group,
+    )
+  }
+
+  /** Unselect the group's own projects without affecting its subgroups. */
+  function hideGroup(path: string): void {
+    setGroupVisibility(path, false)
+  }
+
+  /** Flip the view flag without touching which groups are selected/fetched. */
+  function toggleGroupVisibility(path: string): void {
+    const group = groups.value.find((item) => item.fullPath === path)
+    if (group) setGroupVisibility(path, !group.visible)
+  }
+
   function toggleGroup(path: string, checked: boolean): void {
     if (checked) {
       const prefix = `${path}/`
@@ -352,6 +391,7 @@ export const useReleasesStore = defineStore('releases', () => {
     // derived
     selectedGroups,
     projects,
+    groupsWithProjects,
     loading,
     lastRefresh,
     storageSummary,
@@ -363,6 +403,8 @@ export const useReleasesStore = defineStore('releases', () => {
     ensureDetail,
     refreshAll,
     toggleGroup,
+    hideGroup,
+    toggleGroupVisibility,
     findProject,
     clearData,
   }

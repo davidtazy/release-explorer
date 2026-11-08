@@ -14,6 +14,7 @@ function group(fullPath: string, parentPath: string | null): GroupInfo {
     fullPath,
     webUrl: `https://gitlab.com/${fullPath}`,
     parentPath,
+    visible: true,
   }
 }
 

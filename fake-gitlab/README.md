@@ -6,22 +6,48 @@ names are the source of truth: every **group** becomes a subgroup and every
 
 ```
 fake-gitlab/                     group: fake-gitlab
+├── logo.png                     group avatar
 ├── portal/                      project: fake-gitlab/portal
+│   ├── logo.png                 project avatar
 │   └── releases.json
 ├── platform/                    group: fake-gitlab/platform
+│   ├── logo.png
 │   ├── web-app/                 project: fake-gitlab/platform/web-app
+│   │   ├── logo.png
 │   │   └── releases.json
 │   ├── api-service/             project: fake-gitlab/platform/api-service
+│   │   ├── logo.png
 │   │   └── releases.json
 │   └── core/                    group: fake-gitlab/platform/core
+│       ├── logo.png
 │       └── legacy-tool/         project: fake-gitlab/platform/core/legacy-tool
+│           ├── logo.png
 │           └── releases.json
 └── tools/                       group: fake-gitlab/tools
+    ├── logo.png
     ├── cli/                     project: fake-gitlab/tools/cli
+    │   ├── logo.png
     │   └── releases.json
     └── sandbox/                 project: fake-gitlab/tools/sandbox (no releases)
+        ├── logo.png
         └── releases.json
 ```
+
+## Logos
+
+Every folder may contain a `logo.png` (or `logo.jpg`, `logo.jpeg`, `logo.gif`,
+`logo.webp`). The seeder uploads it as the avatar of that group or project, and
+the app shows it left of the group/project name.
+
+The checked-in logos are generated tiles with the entity's initials:
+
+```sh
+npm run logos:fake-gitlab              # create missing logos only
+npm run logos:fake-gitlab -- --force   # regenerate all of them
+```
+
+Replace any `logo.png` with a real image (≤ 200 KB) and re-seed to change the
+avatar on GitLab.
 
 ## `releases.json`
 
@@ -73,9 +99,9 @@ npm run seed:fake-gitlab:dry   # validate the tree, no API calls
 npm run seed:fake-gitlab       # create groups/projects/releases on GitLab
 ```
 
-The script is idempotent: existing groups and projects are reused, and
-releases are updated in place (which also refreshes their relative dates). It
-never deletes anything.
+The script is idempotent: existing groups and projects are reused, releases are
+updated in place (which also refreshes their relative dates), and avatars are
+re-uploaded. It never deletes anything.
 
 ### Choosing the root group
 

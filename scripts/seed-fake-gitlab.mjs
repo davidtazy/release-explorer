@@ -15,10 +15,18 @@
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
-import { basename, join, relative, resolve } from 'node:path'
+import { basename, extname, join, relative, resolve } from 'node:path'
 
 const DAY_MS = 86_400_000
 const RELEASES_FILE = 'releases.json'
+const LOGO_FILES = ['logo.png', 'logo.jpg', 'logo.jpeg', 'logo.gif', 'logo.webp']
+const LOGO_TYPES = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+}
 const VISIBILITIES = ['private', 'internal', 'public']
 
 const flags = new Set(process.argv.slice(2))
@@ -79,7 +87,10 @@ Optional environment variables:
   FAKE_GITLAB_VISIBILITY  private | internal | public (default private)
 
 The script is idempotent: groups and projects are reused when they already
-exist, releases are created or updated, and nothing is ever deleted.`)
+exist, releases are created or updated, avatars are re-uploaded, and nothing is
+ever deleted. Every folder may contain a logo.png (or logo.jpg/jpeg/gif/webp):
+it is uploaded as that group's or project's avatar. Generate the fixture logos
+with: node scripts/make-fake-logos.mjs`)
 }
 
 function loadDotEnv(file) {
@@ -199,7 +210,13 @@ function readReleases(projectDir, projectName) {
 function scanGroup(dir, groupPath) {
   assertPathSegment(basename(dir), `folder "${relative(repoRoot, dir)}"`)
 
-  const node = { type: 'group', name: basename(dir), path: groupPath, children: [] }
+  const node = {
+    type: 'group',
+    name: basename(dir),
+    path: groupPath,
+    logo: findLogo(dir),
+    children: [],
+  }
   const entries = readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
     .sort((left, right) => left.name.localeCompare(right.name))
@@ -213,6 +230,7 @@ function scanGroup(dir, groupPath) {
         type: 'project',
         name: entry.name,
         path: `${groupPath}/${entry.name}`,
+        logo: findLogo(childDir),
         releases: readReleases(childDir, entry.name),
       })
     } else {
@@ -221,6 +239,14 @@ function scanGroup(dir, groupPath) {
   }
 
   return node
+}
+
+function findLogo(dir) {
+  for (const name of LOGO_FILES) {
+    const file = join(dir, name)
+    if (existsSync(file)) return file
+  }
+  return null
 }
 
 function countTree(node) {
@@ -241,13 +267,15 @@ function countTree(node) {
 function printPlan(node, depth = 0) {
   const pad = '  '.repeat(depth)
   if (node.type === 'group') {
-    console.log(`${pad}${node.path.split('/').pop()}  (group)`)
+    console.log(`${pad}${node.path.split('/').pop()}  (group${node.logo ? ', logo' : ''})`)
     for (const child of node.children) printPlan(child, depth + 1)
     return
   }
 
   const count = node.releases.length
-  console.log(`${pad}${node.name}  (project, ${count} release${count === 1 ? '' : 's'})`)
+  console.log(
+    `${pad}${node.name}  (project, ${count} release${count === 1 ? '' : 's'}${node.logo ? ', logo' : ''})`,
+  )
 }
 
 function sleep(ms) {
@@ -313,6 +341,49 @@ async function apiRequest(path, { method = 'GET', body, allow404 = false } = {})
 
     return payload
   }
+}
+
+async function uploadAvatar(resource, id, filePath) {
+  const extension = extname(filePath).toLowerCase()
+  const form = new FormData()
+  form.append(
+    'avatar',
+    new Blob([readFileSync(filePath)], { type: LOGO_TYPES[extension] ?? 'application/octet-stream' }),
+    basename(filePath),
+  )
+
+  let response
+  try {
+    response = await fetch(`${apiBase}/${resource}/${id}`, {
+      method: 'PUT',
+      headers: { 'PRIVATE-TOKEN': token },
+      body: form,
+    })
+  } catch (error) {
+    throw new Error(`Cannot reach ${apiBase}: ${error.message}`)
+  }
+
+  const text = await response.text()
+  let payload = null
+  if (text) {
+    try {
+      payload = JSON.parse(text)
+    } catch {
+      payload = text
+    }
+  }
+
+  if (!response.ok) {
+    throw new ApiError(
+      'PUT',
+      `/${resource}/${id}`,
+      response.status,
+      response.statusText,
+      describePayload(payload),
+    )
+  }
+
+  return payload
 }
 
 async function ensureGroup(fullPath, parentId, description) {
@@ -442,6 +513,11 @@ async function seedProject(node, namespaceId, stats, seedTime) {
     stats.projectsCreated += created ? 1 : 0
     stats.projectsReused += created ? 0 : 1
 
+    let logoStatus = ''
+    if (node.logo) {
+      logoStatus = await syncAvatar('projects', project.id, node.logo, stats)
+    }
+
     const ready = await waitForDefaultBranch(project)
     let createdReleases = 0
     let updatedReleases = 0
@@ -460,11 +536,26 @@ async function seedProject(node, namespaceId, stats, seedTime) {
         ? 'no releases'
         : `${node.releases.length} release(s) ` +
           `(${createdReleases} created, ${updatedReleases} updated)`
-    console.log(`${created ? '+' : '='} project ${node.path}  ${detail}`)
+    console.log(
+      `${created ? '+' : '='} project ${node.path}  ${detail}${logoStatus ? `, ${logoStatus}` : ''}`,
+    )
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     stats.failures.push({ path: node.path, message })
     console.error(`! project ${node.path}  ${message}`)
+  }
+}
+
+async function syncAvatar(resource, id, filePath, stats) {
+  try {
+    await uploadAvatar(resource, id, filePath)
+    stats.avatarsUploaded += 1
+    return 'logo uploaded'
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    stats.avatarFailures.push({ path: filePath, message })
+    console.warn(`! avatar ${filePath}  ${message}`)
+    return 'logo failed'
   }
 }
 
@@ -477,7 +568,13 @@ async function seedGroup(node, parentId, stats, seedTime, depth) {
   )
   stats.groupsCreated += created ? 1 : 0
   stats.groupsReused += created ? 0 : 1
-  console.log(`${created ? '+' : '='} group   ${group.full_path ?? node.path}`)
+
+  let logoStatus = ''
+  if (node.logo) logoStatus = await syncAvatar('groups', group.id, node.logo, stats)
+
+  console.log(
+    `${created ? '+' : '='} group   ${group.full_path ?? node.path}${logoStatus ? `  ${logoStatus}` : ''}`,
+  )
 
   for (const child of node.children) {
     if (child.type === 'group') {
@@ -530,6 +627,8 @@ async function main() {
     projectsReused: 0,
     releasesCreated: 0,
     releasesUpdated: 0,
+    avatarsUploaded: 0,
+    avatarFailures: [],
     failures: [],
   }
 
@@ -540,7 +639,17 @@ async function main() {
   console.log(`  Groups:   ${stats.groupsCreated} created, ${stats.groupsReused} reused`)
   console.log(`  Projects: ${stats.projectsCreated} created, ${stats.projectsReused} reused`)
   console.log(`  Releases: ${stats.releasesCreated} created, ${stats.releasesUpdated} updated`)
+  console.log(`  Avatars:  ${stats.avatarsUploaded} uploaded`)
   console.log(`  Open:     ${baseUrl}/${rootGroup}`)
+
+  if (stats.avatarFailures.length > 0) {
+    console.log('')
+    console.error(`  Avatar failures: ${stats.avatarFailures.length}`)
+    for (const failure of stats.avatarFailures) {
+      console.error(`    - ${failure.path}: ${failure.message}`)
+    }
+    process.exitCode = 1
+  }
 
   if (stats.failures.length > 0) {
     console.log('')

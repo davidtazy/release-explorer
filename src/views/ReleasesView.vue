@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useReleasesStore } from '@/stores/releases'
 import { isConnected } from '@/lib/auth'
+import EntityAvatar from '@/components/EntityAvatar.vue'
 import { formatDate, formatRelativeTime } from '@/lib/format'
-import { groupProjectsByParent } from '@/lib/projects'
+import {
+  PROJECT_SORT_OPTIONS,
+  groupProjectsByParent,
+  type ProjectSort,
+} from '@/lib/projects'
 
 const store = useReleasesStore()
 const router = useRouter()
 
+const sortMode = ref<ProjectSort>('name')
 const hasSelection = computed(() => store.selectedPaths.length > 0)
-const projectGroups = computed(() => groupProjectsByParent(store.projects, store.groups))
+const projectGroups = computed(() =>
+  groupProjectsByParent(store.projects, store.groups, sortMode.value),
+)
 const withRelease = computed(
   () => store.projects.filter((project) => project.latestRelease !== null).length,
 )
@@ -30,7 +38,7 @@ function openProject(path: string): void {
   <section class="view">
     <header class="view-header">
       <div>
-        <h1>Project releases</h1>
+        <h1>Releases</h1>
         <p class="muted view-subtitle">
           Latest release per project for the groups selected in Preferences.
         </p>
@@ -45,7 +53,7 @@ function openProject(path: string): void {
           :disabled="!isConnected || store.loading"
           @click="store.refreshAll()"
         >
-          {{ store.loading ? 'Refreshing…' : 'Refresh' }}
+          {{ store.loading ? 'Refreshing groups & releases…' : 'Refresh groups & releases' }}
         </button>
       </div>
     </header>
@@ -79,7 +87,21 @@ function openProject(path: string): void {
           <strong>{{ store.projects.length }}</strong> projects ·
           <strong>{{ withRelease }}</strong> with a release
         </span>
-        <span v-if="waitingForSnapshots" class="muted">Loading releases…</span>
+        <div class="group-controls">
+          <span v-if="waitingForSnapshots" class="muted">Loading releases…</span>
+          <label class="sort-control">
+            <span class="field-label">Sort</span>
+            <select v-model="sortMode" aria-label="Sort groups and projects">
+              <option
+                v-for="option in PROJECT_SORT_OPTIONS"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div v-if="failedToLoad" class="panel empty-state">
@@ -103,11 +125,37 @@ function openProject(path: string): void {
           :aria-label="group.name"
         >
           <header class="group-card-header">
-            <div class="group-card-heading">
-              <h2 class="group-card-title">{{ group.name }}</h2>
-              <span class="group-card-path">{{ group.path }}</span>
+            <div class="group-card-identity">
+              <EntityAvatar kind="group" :global-id="group.id" :name="group.name" size="md" />
+              <div class="group-card-heading">
+                <h2 class="group-card-title">{{ group.name }}</h2>
+                <span class="group-card-path">{{ group.path }}</span>
+              </div>
             </div>
-            <span class="count">{{ group.projects.length }}</span>
+            <div class="group-card-actions">
+              <span class="count">{{ group.projects.length }}</span>
+              <button
+                type="button"
+                class="icon-btn"
+                :aria-label="`Hide ${group.name} from the main view`"
+                :title="`Hide ${group.name} — use the eye icon in Preferences to show it again`"
+                @click="store.hideGroup(group.path)"
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  width="14"
+                  height="14"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                >
+                  <circle cx="8" cy="8" r="5.6" />
+                  <path d="M5.4 8h5.2" />
+                </svg>
+              </button>
+            </div>
           </header>
 
           <div class="table-scroll">
@@ -127,14 +175,24 @@ function openProject(path: string): void {
                   @click="openProject(project.fullPath)"
                 >
                   <td>
-                    <RouterLink
-                      class="project-link"
-                      :to="{ name: 'project', query: { path: project.fullPath } }"
-                      @click.stop
-                    >
-                      {{ project.name }}
-                    </RouterLink>
-                    <span class="project-path">{{ project.fullPath }}</span>
+                    <div class="project-cell">
+                      <EntityAvatar
+                        kind="project"
+                        :global-id="project.id"
+                        :name="project.name"
+                        size="sm"
+                      />
+                      <div class="project-cell-body">
+                        <RouterLink
+                          class="project-link"
+                          :to="{ name: 'project', query: { path: project.fullPath } }"
+                          :title="project.fullPath"
+                          @click.stop
+                        >
+                          {{ project.name }}
+                        </RouterLink>
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <span v-if="project.latestRelease" class="version-chip">

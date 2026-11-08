@@ -7,6 +7,7 @@ import GroupTreeNode from './GroupTreeNode.vue'
 const props = defineProps<{
   groups: GroupInfo[]
   selectedPaths: string[]
+  groupsWithProjects: string[]
   busyPaths: string[]
   loading: boolean
   connected: boolean
@@ -14,12 +15,17 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggle: [path: string, checked: boolean]
+  toggleVisibility: [path: string]
 }>()
 
 const tree = computed(() => buildGroupTree(props.groups))
 
 function forwardToggle(path: string, checked: boolean): void {
   emit('toggle', path, checked)
+}
+
+function forwardToggleVisibility(path: string): void {
+  emit('toggleVisibility', path)
 }
 </script>
 
@@ -40,9 +46,11 @@ function forwardToggle(path: string, checked: boolean): void {
         :key="node.fullPath"
         :node="node"
         :selected-paths="selectedPaths"
+        :groups-with-projects="groupsWithProjects"
         :depth="0"
         :busy-paths="busyPaths"
         @toggle="forwardToggle"
+        @toggle-visibility="forwardToggleVisibility"
       />
     </ul>
   </div>
