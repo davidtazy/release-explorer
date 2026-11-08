@@ -1,0 +1,41 @@
+{
+  "project": "web-app",
+  "releases": [
+    {
+      "tagName": "v2.4.0",
+      "name": "Web App 2.4.0",
+      "description": "Live filters, saved views, and a new onboarding flow.",
+      "daysAgo": 0.25
+    },
+    {
+      "tagName": "v2.3.0",
+      "name": "Web App 2.3.0",
+      "description": "Performance pass on the project table.",
+      "daysAgo": 3
+    },
+    {
+      "tagName": "v2.2.0",
+      "name": "Web App 2.2.0",
+      "description": "Dark mode and keyboard shortcuts.",
+      "daysAgo": 10
+    },
+    {
+      "tagName": "v2.1.0",
+      "name": "Web App 2.1.0",
+      "description": "Release timeline and CSV export.",
+      "daysAgo": 45
+    },
+    {
+      "tagName": "v2.0.0",
+      "name": "Web App 2.0.0",
+      "description": "Vue 3 rewrite.",
+      "daysAgo": 200
+    },
+    {
+      "tagName": "v1.0.0",
+      "name": "Web App 1.0.0",
+      "description": "Initial release.",
+      "daysAgo": 400
+    }
+  ]
+}

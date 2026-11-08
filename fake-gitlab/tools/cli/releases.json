@@ -1,0 +1,17 @@
+{
+  "project": "cli",
+  "releases": [
+    {
+      "tagName": "v1.0.0",
+      "name": "CLI 1.0.0",
+      "description": "Stable command set and shell completions.",
+      "daysAgo": 8
+    },
+    {
+      "tagName": "v0.9.0",
+      "name": "CLI 0.9.0",
+      "description": "Beta release with plugin support.",
+      "daysAgo": 380
+    }
+  ]
+}

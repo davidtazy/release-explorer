@@ -1,0 +1,23 @@
+{
+  "project": "portal",
+  "releases": [
+    {
+      "tagName": "v1.2.0",
+      "name": "Portal 1.2.0",
+      "description": "New dashboard widgets and a faster sign-in flow.",
+      "daysAgo": 0.08
+    },
+    {
+      "tagName": "v1.1.0",
+      "name": "Portal 1.1.0",
+      "description": "Theme refresh and accessibility fixes.",
+      "daysAgo": 14
+    },
+    {
+      "tagName": "v1.0.0",
+      "name": "Portal 1.0.0",
+      "description": "First public release of the portal.",
+      "daysAgo": 120
+    }
+  ]
+}

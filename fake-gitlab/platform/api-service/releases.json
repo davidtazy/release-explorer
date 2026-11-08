@@ -1,0 +1,23 @@
+{
+  "project": "api-service",
+  "releases": [
+    {
+      "tagName": "v3.1.0",
+      "name": "API Service 3.1.0",
+      "description": "Cursor pagination for the releases endpoint.",
+      "daysAgo": 1.5
+    },
+    {
+      "tagName": "v3.0.0",
+      "name": "API Service 3.0.0",
+      "description": "Breaking change: token scopes are now enforced per route.",
+      "daysAgo": 25
+    },
+    {
+      "tagName": "v2.0.0",
+      "name": "API Service 2.0.0",
+      "description": "GraphQL gateway in front of the REST service.",
+      "daysAgo": 500
+    }
+  ]
+}

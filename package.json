@@ -13,7 +13,9 @@
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "format": "prettier --write --experimental-cli src/",
+    "seed:fake-gitlab": "node scripts/seed-fake-gitlab.mjs",
+    "seed:fake-gitlab:dry": "node scripts/seed-fake-gitlab.mjs --dry-run"
   },
   "dependencies": {
     "pinia": "^4.0.3",
