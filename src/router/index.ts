@@ -15,6 +15,12 @@ const router = createRouter({
       // Detail view is lazy-loaded: it is only needed after clicking a project.
       component: () => import('../views/ProjectReleasesView.vue'),
     },
+    {
+      path: '/preferences',
+      name: 'preferences',
+      // Preferences are rarely visited; load them on demand.
+      component: () => import('../views/PreferencesView.vue'),
+    },
   ],
 })
 

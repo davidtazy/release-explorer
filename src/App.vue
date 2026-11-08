@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import ConnectionPanel from '@/components/ConnectionPanel.vue'
-import GroupTree from '@/components/GroupTree.vue'
-import StoragePanel from '@/components/StoragePanel.vue'
 import { instanceHost, isConnected, instanceUrl } from '@/lib/auth'
 import { formatRelativeTime } from '@/lib/format'
 import { useReleasesStore } from '@/stores/releases'
@@ -42,16 +39,6 @@ onUnmounted(() => {
       </RouterLink>
 
       <div class="header-actions">
-        <span v-if="isConnected" class="connection-pill">
-          <span class="status-dot" />
-          {{ store.user ? `@${store.user.username}` : instanceHost(instanceUrl) }}
-        </span>
-        <span v-else class="connection-pill muted">Not connected</span>
-
-        <span v-if="store.lastRefresh" class="updated muted">
-          Updated {{ formatRelativeTime(store.lastRefresh) }}
-        </span>
-
         <button
           type="button"
           class="btn btn-primary"
@@ -60,6 +47,20 @@ onUnmounted(() => {
         >
           {{ store.loading ? 'Refreshing…' : 'Refresh' }}
         </button>
+
+        <span v-if="store.lastRefresh" class="updated muted">
+          Updated {{ formatRelativeTime(store.lastRefresh) }}
+        </span>
+
+        <RouterLink
+          to="/preferences"
+          class="connection-pill"
+          :class="{ 'is-offline': !isConnected }"
+          title="Open preferences"
+        >
+          <span v-if="isConnected" class="status-dot" />
+          {{ isConnected ? (store.user ? `@${store.user.username}` : instanceHost(instanceUrl)) : 'Not connected' }}
+        </RouterLink>
       </div>
     </header>
 
@@ -71,30 +72,6 @@ onUnmounted(() => {
     </div>
 
     <div class="app-body">
-      <aside class="sidebar">
-        <ConnectionPanel />
-
-        <section class="panel">
-          <div class="panel-heading">
-            <h2>Your groups</h2>
-            <span class="count">{{ store.groups.length }}</span>
-          </div>
-          <GroupTree
-            :groups="store.groups"
-            :selected-paths="store.selectedPaths"
-            :busy-paths="store.loadingSnapshots"
-            :loading="store.loadingGroups"
-            :connected="isConnected"
-            @toggle="store.toggleGroup"
-          />
-          <p v-if="isConnected && store.groups.length > 0" class="hint">
-            Selecting a parent group includes all of its subgroups.
-          </p>
-        </section>
-
-        <StoragePanel />
-      </aside>
-
       <main class="main">
         <RouterView />
       </main>

@@ -117,7 +117,8 @@ watch(projectPath, (path) => {
 
         <p v-if="loading && !detail" class="muted table-empty">Loading releases…</p>
         <p v-else-if="!detail && !isConnected" class="muted table-empty">
-          Connect to GitLab to load the release history.
+          Connect to GitLab in <RouterLink :to="{ name: 'preferences' }">Preferences</RouterLink> to
+          load the release history.
         </p>
         <p v-else-if="!detail" class="muted table-empty">
           Release history is not available. See the error above.

@@ -8,10 +8,14 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
 
 ## Features
 
+- **Preferences view** (`/preferences`) — connection settings, the selectable
+  group tree, and the cache summary live here instead of cluttering the main
+  view.
 - **Group tree** — `currentUser.groups` (groups you have access to) is rendered
   as a selectable tree. Selecting a parent group automatically covers its
   subgroups.
-- **Latest release table** — project name, latest release tag, release date.
+- **Grouped project cards** — the main view shows one card per group, listing
+  project name, latest release tag, and release date.
 - **Project detail view** — click a project to see its most recent releases
   (up to 20) with a range filter: last day, week, month, year, or any time.
   - With **Any time**, only releases from the last 12 months are shown. If
@@ -23,9 +27,10 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   group, and by a once-a-minute check.
 - **Manual refresh** — a Refresh button forces a refetch of groups and the
   selected group snapshots.
-- **Storage summary + clear** — the sidebar reports how many groups, projects,
-  and releases are cached, plus the date range and capture time. Clearing is a
-  two-click confirmation and only removes cached data (the connection stays).
+- **Storage summary + clear** — the Preferences view reports how many groups,
+  projects, and releases are cached, plus the date range and capture time.
+  Clearing is a two-click confirmation and only removes cached data (the
+  connection stays).
 - **Session-only token** — the personal access token lives in `sessionStorage`
   and is never written to the persisted data model.
 - Light/dark theme, responsive layout, no UI framework.
@@ -45,8 +50,9 @@ npm install
 npm run dev
 ```
 
-Open the printed URL (default `http://localhost:5173`), paste the instance URL
-and token, and click **Connect**.
+Open the printed URL (default `http://localhost:5173`), go to **Preferences**,
+paste the instance URL and token, and click **Connect**. Pick the groups you
+want to follow in the same view, then return to the releases page.
 
 > **Windows PowerShell note:** if `npm` is blocked by the execution policy, use
 > `npm.cmd` (and `npx.cmd`) instead, e.g. `npm.cmd run dev`.
@@ -142,8 +148,8 @@ src/
   api/gitlab.ts            GraphQL queries, client, error handling
   components/              Connection, group tree, storage panels
   lib/                     auth, formatting, release filtering, tree helpers
-  router/index.ts          "/" table view, "/project?path=…" detail view
+  router/index.ts          "/" cards view, "/project?path=…", "/preferences"
   stores/releases.ts       Pinia store, persistence, staleness, refresh
   types/gitlab.ts          Data model
-  views/                   ReleasesView, ProjectReleasesView
+  views/                   ReleasesView, ProjectReleasesView, PreferencesView
 ```

@@ -32,7 +32,7 @@ function openProject(path: string): void {
       <div>
         <h1>Project releases</h1>
         <p class="muted view-subtitle">
-          Latest release per project for the groups selected in the sidebar.
+          Latest release per project for the groups selected in Preferences.
         </p>
       </div>
       <div class="view-actions">
@@ -53,17 +53,23 @@ function openProject(path: string): void {
     <div v-if="!isConnected && store.groups.length === 0" class="panel empty-state">
       <h2>Connect to GitLab</h2>
       <p>
-        Add a personal access token in the <strong>Connection</strong> panel to load the groups you
-        can access.
+        Add a personal access token in <strong>Preferences</strong> to load the groups you can
+        access.
       </p>
+      <RouterLink class="btn btn-primary empty-action" :to="{ name: 'preferences' }">
+        Open Preferences
+      </RouterLink>
     </div>
 
     <div v-else-if="!hasSelection" class="panel empty-state">
       <h2>Select a group</h2>
       <p>
-        Pick one or more groups (or a parent group) in the tree on the left. Their projects and
-        latest releases will appear here.
+        Pick one or more groups (or a parent group) in <strong>Preferences</strong>. Their projects
+        and latest releases will appear here.
       </p>
+      <RouterLink class="btn btn-primary empty-action" :to="{ name: 'preferences' }">
+        Choose groups
+      </RouterLink>
     </div>
 
     <div v-else class="group-cards">
