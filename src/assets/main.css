@@ -756,7 +756,7 @@ select:focus {
   gap: 1rem;
 }
 
-.group-summary {
+.view-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -766,7 +766,7 @@ select:focus {
   font-size: 0.82rem;
 }
 
-.group-controls {
+.view-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -966,28 +966,6 @@ select:focus {
 a.version-chip:hover {
   border-color: var(--accent);
   text-decoration: none;
-}
-
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.6rem 1rem;
-  margin-bottom: 0.85rem;
-}
-
-.field-inline {
-  min-width: 12rem;
-}
-
-.field-inline select {
-  width: auto;
-  min-width: 11rem;
-}
-
-.filter-note {
-  font-size: 0.8rem;
 }
 
 .notice {

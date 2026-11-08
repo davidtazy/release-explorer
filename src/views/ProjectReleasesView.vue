@@ -100,22 +100,28 @@ watch(projectPath, (path) => {
         </div>
       </header>
 
-      <div class="panel">
-        <div class="filter-bar">
-          <label class="field field-inline">
+      <div class="view-toolbar">
+        <span class="muted">
+          Fetched the {{ fetchedCount }} most recent release{{ fetchedCount === 1 ? '' : 's' }}
+          (max {{ RELEASES_PER_PROJECT }})
+        </span>
+        <div class="view-controls">
+          <label class="sort-control">
             <span class="field-label">Released within</span>
-            <select :value="range" @change="onRangeChange">
-              <option v-for="option in RELEASE_RANGE_OPTIONS" :key="option.value" :value="option.value">
+            <select :value="range" aria-label="Filter by release period" @change="onRangeChange">
+              <option
+                v-for="option in RELEASE_RANGE_OPTIONS"
+                :key="option.value"
+                :value="option.value"
+              >
                 {{ option.label }}
               </option>
             </select>
           </label>
-          <p class="muted filter-note">
-            Fetched the {{ fetchedCount }} most recent release{{ fetchedCount === 1 ? '' : 's' }}
-            (max {{ RELEASES_PER_PROJECT }}).
-          </p>
         </div>
+      </div>
 
+      <div class="panel">
         <p v-if="filtered.fallbackToLatest" class="notice">
           No releases in the last 12 months — showing the latest release only.
         </p>

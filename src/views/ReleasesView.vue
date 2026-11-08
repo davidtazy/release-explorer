@@ -81,13 +81,13 @@ function openProject(path: string): void {
     </div>
 
     <div v-else class="group-cards">
-      <div class="group-summary">
+      <div class="view-toolbar">
         <span class="muted">
           <strong>{{ projectGroups.length }}</strong> groups ·
           <strong>{{ store.projects.length }}</strong> projects ·
           <strong>{{ withRelease }}</strong> with a release
         </span>
-        <div class="group-controls">
+        <div class="view-controls">
           <span v-if="waitingForSnapshots" class="muted">Loading releases…</span>
           <label class="sort-control">
             <span class="field-label">Sort</span>
