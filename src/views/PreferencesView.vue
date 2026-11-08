@@ -12,14 +12,10 @@ const store = useReleasesStore()
 <template>
   <section class="view">
     <header class="view-header">
-      <div>
+      <div class="detail-heading">
+        <RouterLink class="back-link" :to="{ name: 'releases' }">← All projects</RouterLink>
         <h1>Preferences</h1>
         <p class="muted view-subtitle">Connection, groups, and cached data for this browser.</p>
-      </div>
-      <div class="view-actions">
-        <RouterLink class="btn btn-ghost" :to="{ name: 'releases' }">
-          ← Back to releases
-        </RouterLink>
       </div>
     </header>
 
