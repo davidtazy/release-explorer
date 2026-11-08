@@ -384,6 +384,10 @@ export const useReleasesStore = defineStore('releases', () => {
     } catch {
       /* ignore */
     }
+
+    // Groups are live access data, not a snapshot: reload them right away so
+    // the chooser is usable immediately instead of waiting for the auto-refresh.
+    void ensureGroups(true)
   }
 
   return {

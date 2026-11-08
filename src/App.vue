@@ -101,6 +101,13 @@ watch(
   () => [isConnected.value, route.name, signedOut.value] as const,
   () => {
     void ensureAuthenticated()
+
+    // After clearing the cache (or on navigation) reload groups right away
+    // instead of waiting for the one-minute auto-refresh interval.
+    if (isConnected.value) {
+      void store.ensureGroups()
+      void store.ensureSelectedSnapshots()
+    }
   },
 )
 </script>
