@@ -6,7 +6,7 @@ import {
   fetchProjectDetails,
   type GitLabContext,
 } from '@/api/gitlab'
-import { instanceUrl, isConnected, token } from '@/lib/auth'
+import { instanceUrl, isConnected } from '@/lib/auth'
 import { filterInvisibleProjects, groupPathsWithProjects } from '@/lib/projects'
 import { releaseTimestamp } from '@/lib/releases'
 import {
@@ -243,7 +243,7 @@ export const useReleasesStore = defineStore('releases', () => {
   // ------------------------------------------------------------------ actions
 
   function context(): GitLabContext {
-    return { instanceUrl: instanceUrl.value, token: token.value }
+    return { instanceUrl: instanceUrl.value }
   }
 
   function dismissError(): void {

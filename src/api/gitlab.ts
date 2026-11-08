@@ -1,4 +1,4 @@
-import { graphqlEndpoint } from '@/lib/auth'
+import { getAccessToken, graphqlEndpoint } from '@/lib/auth'
 import { mergeReleases } from '@/lib/releases'
 import type {
   GroupInfo,
@@ -18,7 +18,6 @@ import type {
 
 export interface GitLabContext {
   instanceUrl: string
-  token: string
 }
 
 export class GitLabApiError extends Error {
@@ -186,6 +185,11 @@ async function graphqlRequest<T>(
   variables: Record<string, unknown> = {},
 ): Promise<T> {
   const endpoint = graphqlEndpoint(context.instanceUrl)
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    throw new GitLabApiError('Not signed in to GitLab. Connect from Preferences.')
+  }
+
   let response: Response
 
   try {
@@ -193,7 +197,7 @@ async function graphqlRequest<T>(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${context.token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ query, variables }),
       signal: AbortSignal.timeout(30_000),
@@ -206,7 +210,7 @@ async function graphqlRequest<T>(
 
   if (response.status === 401) {
     throw new GitLabApiError(
-      'Authentication failed (401). Check that the token is valid and has the read_api scope.',
+      'Your GitLab session is no longer valid. Connect again from Preferences.',
       401,
     )
   }

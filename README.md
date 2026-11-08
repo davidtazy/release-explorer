@@ -4,7 +4,7 @@ A minimal Vue 3 + TypeScript + Pinia app that shows the latest release of every
 project in the GitLab groups you can access.
 
 It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
-`project`). It never mutates anything on GitLab.
+`project`) and reads release/avatar data. It never mutates anything on GitLab.
 
 ## Features
 
@@ -42,28 +42,53 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   projects, and releases are cached, plus the date range and capture time.
   Clearing is a two-click confirmation and only removes cached data (the
   connection stays).
-- **Session-only token** — the personal access token lives in `sessionStorage`
-  and is never written to the persisted data model.
+- **OAuth sign-in (PKCE)** — the app uses GitLab's Authorization Code flow with
+  PKCE and the `read_api` scope. Access and refresh tokens live in
+  `sessionStorage`; the access token is refreshed automatically and is never
+  written to the cached data model.
 - Light/dark theme, responsive layout, no UI framework.
 
 ## Requirements
 
 - Node.js 20+ and npm.
-- A GitLab personal access token with the **`read_api`** scope. Create one at
-  `https://gitlab.com/-/user_settings/personal_access_tokens`.
+- A GitLab **OAuth application** with the `read_api` scope and the redirect URI
+  `http://localhost:5173/callback`.
 - For self-managed GitLab, the instance URL is configurable in the app. The
-  GraphQL endpoint must allow browser requests (CORS); `gitlab.com` does.
+  GraphQL and OAuth endpoints must allow browser requests (CORS); `gitlab.com`
+  does. Register the OAuth application on that instance as well.
 
 ## Getting started
+
+Create the OAuth application in GitLab (User settings → Applications):
+
+| Field | Value |
+| --- | --- |
+| Name | Release Explorer |
+| Redirect URI | `http://localhost:5173/callback` |
+| Scopes | `read_api` |
+
+Copy the **Application ID** into `.env`:
+
+```sh
+VITE_GITLAB_CLIENT_ID=your-application-id
+```
+
+Then start the app:
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open the printed URL (default `http://localhost:5173`), go to **Preferences**,
-paste the instance URL and token, and click **Connect**. Pick the groups you
-want to follow in the same view, then return to the releases page.
+Open the printed URL, go to **Preferences**, check the GitLab URL and click
+**Connect with GitLab**. After authorizing, you are redirected back to
+`/callback`, the app stores the tokens in this tab and loads your groups. Pick
+the groups to follow, then return to the releases page.
+
+> The OAuth client id is public. The app never asks for or stores a personal
+> access token; the client secret is not used (PKCE public client). If GitLab
+> rejects the token exchange with `invalid_client`, make sure the application is
+> not marked **Confidential** in GitLab.
 
 > **Windows PowerShell note:** if `npm` is blocked by the execution policy, use
 > `npm.cmd` (and `npx.cmd`) instead, e.g. `npm.cmd run dev`.
@@ -92,7 +117,7 @@ and releases through the GitLab REST API, and uploads each folder's
 
 ```sh
 # .env (git-ignored)
-TOKEN=glpat-...              # needs the api scope for seeding
+TOKEN=glpat-...              # seeder only; needs the api scope
 FAKE_GITLAB_ROOT=fake-gitlab # or an existing parent + leaf, e.g. me/fake-gitlab
 ```
 
@@ -112,6 +137,7 @@ npm run seed:fake-gitlab       # seed GitLab (idempotent, never deletes)
   existing group. GitLab.com did not allow this account to create a top-level
   group, so the working setup uses `FAKE_GITLAB_ROOT=david_tazy/fake-gitlab`.
 - Seeding requires the `api` scope; the app itself only needs `read_api`.
+  `TOKEN` is only read by the seeder script and is never exposed to the app.
 - The app stays read-only — the seeder is a separate dev script.
 
 ## GraphQL design
@@ -134,13 +160,13 @@ there is no per-project N+1 fan-out:
    paginates the result locally.
 
 Requests are sent to `<instance>/api/graphql` with
-`Authorization: Bearer <token>`.
+`Authorization: Bearer <OAuth access token>`.
 
 Avatars are binary rather than GraphQL data: the app downloads them from
 `GET <instance>/api/v4/groups/:id/avatar` and
-`GET <instance>/api/v4/projects/:id/avatar` with the same token, turns them
-into in-memory blob URLs, and caches them for the session (so each avatar is
-requested once per session).
+`GET <instance>/api/v4/projects/:id/avatar` with the same OAuth token, turns
+them into in-memory blob URLs, and caches them for the session (so each avatar
+is requested once per session).
 
 ## Persisted data model
 
@@ -164,7 +190,8 @@ requested once per session).
   projects. Hiding a group never hides its subgroups.
 - Cached data is ignored if the saved `instanceUrl` no longer matches the
   current one.
-- The token is stored separately under `sessionStorage`, never in this model.
+- The OAuth access/refresh tokens are stored separately in `sessionStorage`,
+  never in this model.
 - `STALE_AFTER_MS = 3_600_000` (one hour).
 
 ## Project structure
@@ -178,8 +205,8 @@ src/
   api/gitlab.ts            GraphQL queries, client, error handling
   components/              Connection, group tree, storage, avatars
   lib/                     auth, avatars, formatting, pagination, release filtering, grouping, theme, tree helpers
-  router/index.ts          "/" cards view, "/project?path=…", "/preferences"
+  router/index.ts          "/" cards view, "/project?path=…", "/preferences", "/callback"
   stores/releases.ts       Pinia store, persistence, staleness, refresh
   types/gitlab.ts          Data model
-  views/                   ReleasesView, ProjectReleasesView, PreferencesView
+  views/                   ReleasesView, ProjectReleasesView, PreferencesView, AuthCallbackView
 ```

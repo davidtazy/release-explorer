@@ -2,10 +2,13 @@
  * Group and project avatars are served from authenticated REST endpoints
  * (`GET /api/v4/groups/:id/avatar`), not from the GraphQL `avatarUrl` (that
  * uploads URL requires a session cookie for private entities). We download the
- * bytes with the personal access token and expose them as blob URLs.
+ * bytes with the OAuth access token and expose them as blob URLs.
  */
 
 export type AvatarKind = 'group' | 'project'
+
+// The token passed to `loadAvatar` is an OAuth access token obtained via
+// `getAccessToken()`; it is never persisted with the fetched data.
 
 const blobUrls = new Map<string, string>()
 const pending = new Map<string, Promise<string>>()

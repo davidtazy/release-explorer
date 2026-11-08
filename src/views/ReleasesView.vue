@@ -61,8 +61,7 @@ function openProject(path: string): void {
     <div v-if="!isConnected && store.groups.length === 0" class="panel empty-state">
       <h2>Connect to GitLab</h2>
       <p>
-        Add a personal access token in <strong>Preferences</strong> to load the groups you can
-        access.
+        Sign in with GitLab from <strong>Preferences</strong> to load the groups you can access.
       </p>
       <RouterLink class="btn btn-primary empty-action" :to="{ name: 'preferences' }">
         Open Preferences

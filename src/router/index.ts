@@ -21,6 +21,12 @@ const router = createRouter({
       // Preferences are rarely visited; load them on demand.
       component: () => import('../views/PreferencesView.vue'),
     },
+    {
+      path: '/callback',
+      name: 'callback',
+      // OAuth redirect target registered on the GitLab application.
+      component: () => import('../views/AuthCallbackView.vue'),
+    },
   ],
 })
 

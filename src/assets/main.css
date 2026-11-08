@@ -126,6 +126,10 @@ code,
   line-height: 1.45;
 }
 
+.hint-error {
+  color: var(--danger);
+}
+
 .link {
   color: var(--accent-strong);
   white-space: nowrap;

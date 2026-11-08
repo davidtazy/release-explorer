@@ -1,48 +1,46 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useReleasesStore } from '@/stores/releases'
+import { resetAvatarCache } from '@/lib/avatars'
 import {
-  connect,
   disconnect,
   instanceHost,
   instanceUrl,
   isConnected,
+  isOAuthConfigured,
   normalizeInstanceUrl,
+  startLogin,
 } from '@/lib/auth'
 
 const store = useReleasesStore()
 
 const url = ref(instanceUrl.value)
-const accessToken = ref('')
 const submitting = ref(false)
+const error = ref<string | null>(null)
 
 const host = computed(() => instanceHost(instanceUrl.value))
-const tokenSettingsUrl = computed(
-  () => `${normalizeInstanceUrl(instanceUrl.value)}/-/user_settings/personal_access_tokens`,
-)
-const canSubmit = computed(() => accessToken.value.trim().length > 0 && !submitting.value)
+const canSubmit = computed(() => isOAuthConfigured && !submitting.value)
 
-async function onSubmit(): Promise<void> {
+async function onConnect(): Promise<void> {
   if (!canSubmit.value) return
 
-  const nextInstance = normalizeInstanceUrl(url.value)
-  const changedInstance = nextInstance !== normalizeInstanceUrl(instanceUrl.value)
-
-  connect(nextInstance, accessToken.value)
-  accessToken.value = ''
+  error.value = null
   submitting.value = true
 
-  if (changedInstance) store.clearData()
+  const nextInstance = normalizeInstanceUrl(url.value)
+  if (nextInstance !== normalizeInstanceUrl(instanceUrl.value)) store.clearData()
 
   try {
-    await store.refreshAll()
-  } finally {
+    await startLogin(nextInstance)
+  } catch (caught) {
+    error.value = caught instanceof Error ? caught.message : 'Could not start the GitLab login.'
     submitting.value = false
   }
 }
 
 function onDisconnect(): void {
   disconnect()
+  resetAvatarCache()
 }
 </script>
 
@@ -61,36 +59,28 @@ function onDisconnect(): void {
       <button type="button" class="btn btn-ghost btn-sm" @click="onDisconnect">Disconnect</button>
     </template>
 
-    <form v-else class="connection-form" @submit.prevent="onSubmit">
+    <form v-else class="connection-form" @submit.prevent="onConnect">
       <label class="field">
         <span class="field-label">GitLab URL</span>
         <input v-model="url" type="url" name="instance" placeholder="https://gitlab.com" />
       </label>
 
-      <label class="field">
-        <span class="field-label">Personal access token</span>
-        <input
-          v-model="accessToken"
-          type="password"
-          name="token"
-          placeholder="glpat-…"
-          autocomplete="off"
-          spellcheck="false"
-        />
-      </label>
-
       <p class="hint">
-        Needs the <code>read_api</code> scope. The token is kept in this tab only
-        (sessionStorage) and is never written to the cached data model.
+        Sign in with GitLab to grant read-only (<code>read_api</code>) access. You will be
+        redirected to GitLab and back; no token is pasted into this app.
       </p>
+
+      <p v-if="!isOAuthConfigured" class="hint hint-error">
+        OAuth is not configured. Set <code>VITE_GITLAB_CLIENT_ID</code> in <code>.env</code> and
+        restart the dev server.
+      </p>
+
+      <p v-if="error" class="hint hint-error">{{ error }}</p>
 
       <div class="connection-actions">
         <button type="submit" class="btn btn-primary" :disabled="!canSubmit">
-          {{ submitting ? 'Connecting…' : 'Connect' }}
+          {{ submitting ? 'Redirecting to GitLab…' : 'Connect with GitLab' }}
         </button>
-        <a class="hint link" :href="tokenSettingsUrl" target="_blank" rel="noreferrer noopener">
-          Create a token ↗
-        </a>
       </div>
     </form>
   </section>

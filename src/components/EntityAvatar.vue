@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { instanceUrl, token } from '@/lib/auth'
+import { getAccessToken, instanceUrl } from '@/lib/auth'
 import { cachedAvatar, loadAvatar, type AvatarKind } from '@/lib/avatars'
 
 const props = withDefaults(
@@ -21,14 +21,17 @@ async function refresh(): Promise<void> {
   const globalId = props.globalId
 
   src.value = cachedAvatar(kind, instanceUrl.value, globalId)
-  if (!globalId || !token.value) return
+  if (!globalId) return
 
-  const url = await loadAvatar(kind, instanceUrl.value, token.value, globalId)
+  const accessToken = await getAccessToken()
+  if (!accessToken) return
+
+  const url = await loadAvatar(kind, instanceUrl.value, accessToken, globalId)
   if (globalId === props.globalId) src.value = url
 }
 
 watch(
-  () => [props.kind, props.globalId, instanceUrl.value, token.value] as const,
+  () => [props.kind, props.globalId, instanceUrl.value] as const,
   () => {
     void refresh()
   },
