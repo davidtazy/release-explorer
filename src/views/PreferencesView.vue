@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import ConnectionPanel from '@/components/ConnectionPanel.vue'
 import GroupTree from '@/components/GroupTree.vue'
 import StoragePanel from '@/components/StoragePanel.vue'
 import { isConnected } from '@/lib/auth'
@@ -26,14 +25,12 @@ function onThemeChange(event: Event): void {
         <RouterLink class="back-link" :to="{ name: 'releases' }">← All projects</RouterLink>
         <h1>Preferences</h1>
         <p class="muted view-subtitle">
-          Appearance, connection, groups, and cached data for this browser.
+          Appearance, groups, and cached data for this browser.
         </p>
       </div>
     </header>
 
     <div class="preferences-grid">
-      <ConnectionPanel />
-
       <section class="panel">
         <div class="panel-heading">
           <h2>Appearance</h2>

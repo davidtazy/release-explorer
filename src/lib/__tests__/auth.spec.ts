@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAuthorizeUrl, callbackUrl } from '@/lib/auth'
+import { buildAuthorizeUrl, callbackUrl, clearSignedOut, logout, signedOut } from '@/lib/auth'
 
 const options = {
   instanceUrl: 'https://gitlab.com',
@@ -36,5 +36,25 @@ describe('buildAuthorizeUrl', () => {
 describe('callbackUrl', () => {
   it('points at the local /callback route', () => {
     expect(callbackUrl()).toBe(`${window.location.origin}/callback`)
+  })
+})
+
+describe('logout', () => {
+  it('clears the local session and marks the user signed out', async () => {
+    sessionStorage.setItem('gitlab-release-explorer.oauth-access', 'access')
+    sessionStorage.setItem('gitlab-release-explorer.oauth-refresh', 'refresh')
+    sessionStorage.setItem('gitlab-release-explorer.oauth-expires', '123')
+
+    await logout()
+
+    expect(signedOut.value).toBe(true)
+    expect(sessionStorage.getItem('gitlab-release-explorer.oauth-access')).toBeNull()
+    expect(sessionStorage.getItem('gitlab-release-explorer.oauth-refresh')).toBeNull()
+    expect(sessionStorage.getItem('gitlab-release-explorer.oauth-expires')).toBeNull()
+    expect(sessionStorage.getItem('gitlab-release-explorer.signed-out')).toBe('1')
+
+    clearSignedOut()
+    expect(signedOut.value).toBe(false)
+    expect(sessionStorage.getItem('gitlab-release-explorer.signed-out')).toBeNull()
   })
 })

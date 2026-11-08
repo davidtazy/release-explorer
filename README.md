@@ -8,9 +8,8 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
 
 ## Features
 
-- **Preferences view** (`/preferences`) — connection settings, the selectable
-  group tree, and the cache summary live here instead of cluttering the main
-  view.
+- **Preferences view** (`/preferences`) — theme selection, the selectable group
+  tree, and the cache summary live here instead of cluttering the main view.
 - **Group tree** — `currentUser.groups` (groups you have access to) is rendered
   as a selectable tree. Selecting a parent group automatically covers its
   subgroups.
@@ -43,9 +42,16 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
   Clearing is a two-click confirmation and only removes cached data (the
   connection stays).
 - **OAuth sign-in (PKCE)** — the app uses GitLab's Authorization Code flow with
-  PKCE and the `read_api` scope. Access and refresh tokens live in
-  `sessionStorage`; the access token is refreshed automatically and is never
-  written to the cached data model.
+  PKCE and the `read_api` scope. Unauthenticated visits redirect straight to
+  GitLab; after authorizing, the app returns to `/callback` and loads your
+  groups. Access and refresh tokens live in `sessionStorage` (per tab), the
+  access token refreshes automatically, and neither is written to the cached
+  data model. Closing the tab signs you out.
+- **Sign out** — the header button revokes the access/refresh tokens at
+  GitLab's `/oauth/revoke`, clears the local session and avatars, then shows a
+  signed-out screen. Cached GitLab data stays on the browser and is reused when
+  the same user signs back in. Signing in again is explicit, so logging out
+  does not immediately bounce back to GitLab.
 - Light/dark theme, responsive layout, no UI framework.
 
 ## Requirements
@@ -53,9 +59,9 @@ It is **read-only**: the app only runs GraphQL queries (`currentUser`, `group`,
 - Node.js 20+ and npm.
 - A GitLab **OAuth application** with the `read_api` scope and the redirect URI
   `http://localhost:5173/callback`.
-- For self-managed GitLab, the instance URL is configurable in the app. The
-  GraphQL and OAuth endpoints must allow browser requests (CORS); `gitlab.com`
-  does. Register the OAuth application on that instance as well.
+- For self-managed GitLab, set `VITE_GITLAB_INSTANCE_URL` in `.env` and register
+  the OAuth application on that instance. The GraphQL and OAuth endpoints must
+  allow browser requests (CORS).
 
 ## Getting started
 
@@ -80,10 +86,21 @@ npm install
 npm run dev
 ```
 
-Open the printed URL, go to **Preferences**, check the GitLab URL and click
-**Connect with GitLab**. After authorizing, you are redirected back to
-`/callback`, the app stores the tokens in this tab and loads your groups. Pick
-the groups to follow, then return to the releases page.
+Open the printed URL. The app immediately redirects you to GitLab to authorize
+read-only access; after approving, you land back on `/callback`, the tokens are
+stored in this tab, and you are taken to the **Releases** page. Open
+**Preferences** from the header to pick the groups you want to follow.
+
+**Signing out** is available in the header (next to your username). It revokes
+the tokens through GitLab's `/oauth/revoke` endpoint, clears the tokens and
+avatars, and shows a "Signed out" screen with a **Sign in with GitLab** button.
+Cached groups, releases, selections and hidden-group flags are kept, so the
+same user resumes quickly after signing back in. The app does not immediately
+redirect to GitLab again after an explicit sign-out. Closing the tab also ends
+the session because tokens are kept in `sessionStorage`.
+
+The cache is not scoped per GitLab user. On a shared browser, clear the cached
+data from Preferences before switching accounts.
 
 > The OAuth client id is public. The app never asks for or stores a personal
 > access token; the client secret is not used (PKCE public client). If GitLab
@@ -203,7 +220,7 @@ scripts/
   make-fake-logos.mjs      generates the fixture logo.png files
 src/
   api/gitlab.ts            GraphQL queries, client, error handling
-  components/              Connection, group tree, storage, avatars
+  components/              group tree, storage, avatars
   lib/                     auth, avatars, formatting, pagination, release filtering, grouping, theme, tree helpers
   router/index.ts          "/" cards view, "/project?path=…", "/preferences", "/callback"
   stores/releases.ts       Pinia store, persistence, staleness, refresh

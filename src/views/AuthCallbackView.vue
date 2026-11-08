@@ -35,7 +35,7 @@ onMounted(async () => {
   try {
     await completeLogin(code, state)
     await store.refreshAll()
-    await router.replace({ name: 'preferences' })
+    await router.replace({ name: 'releases' })
   } catch (caught) {
     error.value =
       caught instanceof Error ? caught.message : 'Could not complete the GitLab sign-in.'
@@ -62,7 +62,7 @@ onMounted(async () => {
         <h2>Could not sign in</h2>
         <p>{{ error }}</p>
         <RouterLink class="btn btn-primary empty-action" :to="{ name: 'preferences' }">
-          Back to Preferences
+          Try again
         </RouterLink>
       </template>
     </div>

@@ -6,6 +6,7 @@ const REFRESH_KEY = 'gitlab-release-explorer.oauth-refresh'
 const EXPIRES_KEY = 'gitlab-release-explorer.oauth-expires'
 const STATE_KEY = 'gitlab-release-explorer.oauth-state'
 const VERIFIER_KEY = 'gitlab-release-explorer.oauth-verifier'
+const SIGNED_OUT_KEY = 'gitlab-release-explorer.signed-out'
 const LEGACY_TOKEN_KEY = 'gitlab-release-explorer.token'
 
 export const DEFAULT_INSTANCE = 'https://gitlab.com'
@@ -13,6 +14,7 @@ export const OAUTH_SCOPE = 'read_api'
 /** Public OAuth application id (safe to expose in the browser). */
 export const clientId = (import.meta.env.VITE_GITLAB_CLIENT_ID ?? '').trim()
 export const isOAuthConfigured = clientId.length > 0
+const configuredInstance = (import.meta.env.VITE_GITLAB_INSTANCE_URL ?? '').trim()
 
 function readSession(key: string): string {
   try {
@@ -131,8 +133,16 @@ const refreshToken = ref(readSession(REFRESH_KEY))
 const expiresAt = ref(Number(readSession(EXPIRES_KEY)) || 0)
 
 /** GitLab base URL, remembered across sessions but not secret. */
-export const instanceUrl = ref(normalizeInstanceUrl(readLocal(INSTANCE_KEY) || DEFAULT_INSTANCE))
+export const instanceUrl = ref(
+  normalizeInstanceUrl(readLocal(INSTANCE_KEY) || configuredInstance || DEFAULT_INSTANCE),
+)
 export const isConnected = computed(() => token.value.length > 0)
+
+/**
+ * Set after an explicit sign-out so the app shows a signed-out screen instead
+ * of immediately bouncing back to GitLab. Cleared when the user signs in again.
+ */
+export const signedOut = ref(readSession(SIGNED_OUT_KEY) === '1')
 
 interface TokenResponse {
   access_token: string
@@ -198,6 +208,8 @@ export async function startLogin(url: string): Promise<void> {
     )
   }
 
+  clearSignedOut()
+
   const target = normalizeInstanceUrl(url)
   rememberInstance(target)
 
@@ -243,6 +255,7 @@ export async function completeLogin(code: string, state: string): Promise<void> 
   })
 
   storeTokens(data)
+  clearSignedOut()
 }
 
 let refreshPromise: Promise<string> | null = null
@@ -269,6 +282,7 @@ async function refreshAccessToken(): Promise<string> {
         refresh_token: refreshToken.value,
         redirect_uri: callbackUrl(),
       })
+      if (signedOut.value) return ''
       storeTokens(data)
       return token.value
     } catch {
@@ -295,3 +309,49 @@ export function disconnect(): void {
 
 // Older builds kept a personal access token in this key; it is no longer used.
 writeSession(LEGACY_TOKEN_KEY, '')
+
+export function clearSignedOut(): void {
+  signedOut.value = false
+  writeSession(SIGNED_OUT_KEY, '')
+}
+
+/** Best-effort RFC 7009 revocation; the local session is cleared regardless. */
+async function revokeToken(value: string): Promise<void> {
+  if (!value || !clientId) return
+
+  try {
+    await fetch(`${normalizeInstanceUrl(instanceUrl.value)}/oauth/revoke`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: clientId, token: value }),
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch {
+    /* revocation is best effort; local cleanup already happened */
+  }
+}
+
+/**
+ * Sign out: revoke the OAuth tokens, clear the local session and remember the
+ * explicit sign-out so the app does not immediately redirect to GitLab again.
+ */
+export async function logout(): Promise<void> {
+  const access = token.value
+  const refresh = refreshToken.value
+
+  signedOut.value = true
+  writeSession(SIGNED_OUT_KEY, '1')
+
+  token.value = ''
+  refreshToken.value = ''
+  expiresAt.value = 0
+
+  writeSession(ACCESS_KEY, '')
+  writeSession(REFRESH_KEY, '')
+  writeSession(EXPIRES_KEY, '')
+  writeSession(STATE_KEY, '')
+  writeSession(VERIFIER_KEY, '')
+  writeSession(LEGACY_TOKEN_KEY, '')
+
+  await Promise.allSettled([revokeToken(refresh), revokeToken(access)])
+}
